@@ -9,10 +9,9 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import Pos from './pages/admin/Pos';
 import Billing from './pages/admin/Billing';
 import MenuManager from './pages/admin/MenuManager';
-import Reports from './pages/admin/Reports';
-import UsersManager from './pages/admin/UsersManager';
+import FinancialHub from './pages/admin/FinancialHub';
 import TablesManager from './pages/admin/TablesManager';
-import ExpensesManager from './pages/admin/ExpensesManager';
+import UsersManager from './pages/admin/UsersManager';
 
 // Waiter Pages
 import WaiterDashboard from './pages/waiter/WaiterDashboard';
@@ -57,8 +56,7 @@ const App = () => {
       case 'billing': return '🧾 Open Table Billing & Settlement';
       case 'menu': return '🍽️ Pakistani Cuisine Menu Manager';
       case 'tables': return '🪑 Restaurant Tables Configuration';
-      case 'expenses': return '💸 Expenses & Payroll Management';
-      case 'reports': return '📈 Sales & Revenue Reports';
+      case 'financials': return '💰 Financial Hub & Operating Expenses';
       case 'users': return '👥 Staff Users & Role Permissions';
       case 'new_order': return '📝 Take New Table Order';
       default: return 'Indus Hotel POS';
@@ -73,8 +71,7 @@ const App = () => {
         case 'billing': return <Billing />;
         case 'menu': return <MenuManager />;
         case 'tables': return <TablesManager />;
-        case 'expenses': return <ExpensesManager />;
-        case 'reports': return <Reports />;
+        case 'financials': return <FinancialHub />;
         case 'users': return <UsersManager />;
         default: return <AdminDashboard setActiveTab={setActiveTab} />;
       }

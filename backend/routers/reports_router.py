@@ -79,3 +79,19 @@ def get_recent_bills(
         }
         for b in bills
     ]
+
+@router.get("/monthly")
+def get_monthly_sales(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_roles(["admin"]))
+):
+    bills = db.query(models.Bill).all()
+    monthly_data = {}
+    for b in bills:
+        month_str = b.created_at.strftime("%Y-%m")
+        monthly_data[month_str] = monthly_data.get(month_str, 0.0) + float(b.total_amount)
+    
+    return [
+        {"month": m, "revenue": round(rev, 2)}
+        for m, rev in sorted(monthly_data.items(), reverse=True)
+    ]
