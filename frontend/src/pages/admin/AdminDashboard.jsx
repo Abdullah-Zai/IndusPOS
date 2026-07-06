@@ -7,6 +7,8 @@ const AdminDashboard = ({ setActiveTab }) => {
   const [summary, setSummary] = useState({ total_revenue: 0, total_orders: 0, average_order_value: 0 });
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [totalSalaries, setTotalSalaries] = useState(0);
 
   const loadData = async () => {
     try {
@@ -31,6 +33,21 @@ const AdminDashboard = ({ setActiveTab }) => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const savedExp = localStorage.getItem('indus_expenses');
+    if (savedExp) {
+      const list = JSON.parse(savedExp);
+      setTotalExpenses(list.reduce((acc, e) => acc + e.amount, 0));
+    }
+    const savedSal = localStorage.getItem('indus_salaries');
+    if (savedSal) {
+      const list = JSON.parse(savedSal);
+      setTotalSalaries(list.reduce((acc, s) => acc + s.amount, 0));
+    }
+  }, []);
+
+  const netProfit = (summary.total_revenue || 0) - totalExpenses - totalSalaries;
+
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       await authFetch(`/api/orders/${orderId}/status`, {
@@ -46,34 +63,44 @@ const AdminDashboard = ({ setActiveTab }) => {
   return (
     <div className="page-body animate-fade-in">
       {/* Stats Cards */}
-      <div className="grid-cols-3" style={{ marginBottom: '2.5rem' }}>
-        <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+      <div className="grid-cols-4" style={{ marginBottom: '2.5rem' }}>
+        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
             💰
           </div>
           <div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Total Revenue</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>Rs. {summary.total_revenue.toLocaleString()}</div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Gross Sales</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>Rs. {summary.total_revenue.toLocaleString()}</div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '14px', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
+        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: netProfit >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: netProfit >= 0 ? '#10b981' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: netProfit >= 0 ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)' }}>
+            📈
+          </div>
+          <div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Net Profit</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: netProfit >= 0 ? '#10b981' : 'var(--danger)' }}>Rs. {netProfit.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
             🛒
           </div>
           <div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Total Paid Bills</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>{summary.total_orders}</div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Paid Bills</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>{summary.total_orders}</div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '14px', background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-            🔥
+        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+            🍳
           </div>
           <div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Active Kitchen Queue</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>{orders.length}</div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Kitchen Queue</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>{orders.length}</div>
           </div>
         </div>
       </div>

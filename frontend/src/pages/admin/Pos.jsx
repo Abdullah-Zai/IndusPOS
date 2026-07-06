@@ -17,6 +17,41 @@ const Pos = () => {
   const [loading, setLoading] = useState(false);
   const [receiptModal, setReceiptModal] = useState(null);
 
+  // Expanded Prototyping States
+  const [tables, setTables] = useState([]);
+  const [riders, setRiders] = useState([]);
+  const [selectedRider, setSelectedRider] = useState('');
+  const [showAddRiderModal, setShowAddRiderModal] = useState(false);
+  const [newRiderName, setNewRiderName] = useState('');
+  const [newRiderPhone, setNewRiderPhone] = useState('');
+
+  useEffect(() => {
+    // Load Tables
+    const savedTables = localStorage.getItem('indus_tables');
+    if (savedTables) {
+      setTables(JSON.parse(savedTables));
+    } else {
+      const defaults = [];
+      for (let i = 1; i <= 10; i++) {
+        defaults.push({ id: i, name: `Table ${i}`, capacity: 4, status: 'available', isActive: true });
+      }
+      setTables(defaults);
+    }
+
+    // Load Riders
+    const savedRiders = localStorage.getItem('indus_riders');
+    if (savedRiders) {
+      setRiders(JSON.parse(savedRiders));
+    } else {
+      const defaultRiders = [
+        { id: 1, name: 'Ali Khan', phone: '0300-1112223' },
+        { id: 2, name: 'Bilal Ahmed', phone: '0321-4445556' }
+      ];
+      localStorage.setItem('indus_riders', JSON.stringify(defaultRiders));
+      setRiders(defaultRiders);
+    }
+  }, []);
+
   useEffect(() => {
     authFetch('/api/menu/categories')
       .then(res => res.json())
@@ -64,6 +99,7 @@ const Pos = () => {
   const clearCart = () => {
     setCart([]);
     setTableNo('');
+    setSelectedRider('');
   };
 
   const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
@@ -71,13 +107,16 @@ const Pos = () => {
   const handleCheckout = async () => {
     if (cart.length === 0) return alert('Cart is empty!');
     if (orderType === 'dine_in' && !tableNo.trim()) {
-      return alert('Please enter Table Number for Dine-In orders!');
+      return alert('Please select a Table for Dine-In orders!');
+    }
+    if (orderType === 'delivery' && !selectedRider) {
+      return alert('Please select a Delivery Rider!');
     }
 
     setLoading(true);
     try {
       const payload = {
-        table_no: tableNo || null,
+        table_no: orderType === 'delivery' ? selectedRider.substring(0, 20) : (tableNo || null),
         order_type: orderType,
         payment_method: paymentMethod,
         items: cart.map(ci => ({
@@ -218,14 +257,44 @@ const Pos = () => {
 
             {orderType === 'dine_in' && (
               <div>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="🪑 Enter Table No (e.g. Table 5, A2)..." 
-                  value={tableNo} 
+                <select
+                  className="form-control"
+                  value={tableNo}
                   onChange={(e) => setTableNo(e.target.value)}
-                  style={{ padding: '0.55rem 0.8rem', fontSize: '0.9rem' }}
-                />
+                  style={{ width: '100%', padding: '0.55rem 0.8rem', fontSize: '0.9rem', background: 'var(--bg-input)' }}
+                  required
+                >
+                  <option value="">-- Select Table --</option>
+                  {tables.filter(t => t.isActive).map(t => (
+                    <option key={t.id} value={t.name}>{t.name} (👤 {t.capacity})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {orderType === 'delivery' && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select
+                  className="form-control"
+                  value={selectedRider}
+                  onChange={(e) => setSelectedRider(e.target.value)}
+                  style={{ flex: 1, padding: '0.55rem 0.8rem', fontSize: '0.9rem', background: 'var(--bg-input)' }}
+                  required
+                >
+                  <option value="">-- Choose Rider --</option>
+                  {riders.map(r => (
+                    <option key={r.id} value={r.name}>{r.name} ({r.phone})</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowAddRiderModal(true)}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.5rem', fontSize: '0.9rem' }}
+                  title="Add New Rider"
+                >
+                  ➕
+                </button>
               </div>
             )}
           </div>
@@ -329,6 +398,62 @@ const Pos = () => {
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Thank you for dining with Indus Hotel!</p>
           </div>
         )}
+      </Modal>
+
+      {/* Quick Add Rider Modal */}
+      <Modal
+        isOpen={showAddRiderModal}
+        onClose={() => setShowAddRiderModal(false)}
+        title="➕ Register New Delivery Rider"
+        footer={
+          <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+            <button 
+              onClick={() => {
+                if (!newRiderName.trim() || !newRiderPhone.trim()) return alert('Name and phone are required!');
+                const newRider = { id: Date.now(), name: newRiderName.trim(), phone: newRiderPhone.trim() };
+                const updated = [...riders, newRider];
+                localStorage.setItem('indus_riders', JSON.stringify(updated));
+                setRiders(updated);
+                setSelectedRider(newRider.name);
+                setNewRiderName('');
+                setNewRiderPhone('');
+                setShowAddRiderModal(false);
+              }} 
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+            >
+              Add Rider
+            </button>
+            <button onClick={() => setShowAddRiderModal(false)} className="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem 0' }}>
+          <div>
+            <label className="form-label">Rider Name</label>
+            <input 
+              type="text" 
+              className="form-control" 
+              value={newRiderName} 
+              onChange={(e) => setNewRiderName(e.target.value)} 
+              placeholder="e.g. Sajid Khan" 
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label">Phone Number</label>
+            <input 
+              type="text" 
+              className="form-control" 
+              value={newRiderPhone} 
+              onChange={(e) => setNewRiderPhone(e.target.value)} 
+              placeholder="e.g. 0300-1234567" 
+              required
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );

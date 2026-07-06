@@ -14,8 +14,21 @@ const NewOrder = ({ setActiveTab }) => {
   const [tableNo, setTableNo] = useState('');
   const [loading, setLoading] = useState(false);
   const [successModal, setSuccessModal] = useState(null);
+  const [tables, setTables] = useState([]);
 
   useEffect(() => {
+    // Load active tables
+    const saved = localStorage.getItem('indus_tables');
+    if (saved) {
+      setTables(JSON.parse(saved));
+    } else {
+      const defaults = [];
+      for (let i = 1; i <= 10; i++) {
+        defaults.push({ id: i, name: `Table ${i}`, capacity: 4, status: 'available', isActive: true });
+      }
+      setTables(defaults);
+    }
+
     authFetch('/api/menu/categories')
       .then(res => res.json())
       .then(data => setCategories(data))
@@ -143,16 +156,19 @@ const NewOrder = ({ setActiveTab }) => {
           </div>
 
           <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(99, 102, 241, 0.08)' }}>
-            <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>Required Table Number</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="e.g. Table 4, VIP 1..." 
+            <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>Select Dining Table</label>
+            <select 
+              className="form-control" 
               value={tableNo} 
               onChange={(e) => setTableNo(e.target.value)} 
               required
-              style={{ fontSize: '1rem', fontWeight: '700', borderColor: tableNo ? 'var(--success)' : 'var(--accent-primary)', background: 'var(--bg-input)' }}
-            />
+              style={{ width: '100%', fontSize: '1rem', fontWeight: '700', borderColor: tableNo ? 'var(--success)' : 'var(--accent-primary)', background: 'var(--bg-input)' }}
+            >
+              <option value="">-- Select Table --</option>
+              {tables.filter(t => t.isActive).map(t => (
+                <option key={t.id} value={t.name}>{t.name} (👤 {t.capacity})</option>
+              ))}
+            </select>
           </div>
 
           <div className="pos-cart-items">

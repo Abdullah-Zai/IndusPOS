@@ -7,6 +7,8 @@ const Reports = () => {
   const [topItems, setTopItems] = useState([]);
   const [recentBills, setRecentBills] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [totalSalaries, setTotalSalaries] = useState(0);
 
   // Date filters
   const [startDate, setStartDate] = useState('');
@@ -39,6 +41,21 @@ const Reports = () => {
     loadReports();
   }, [startDate, endDate]);
 
+  useEffect(() => {
+    const savedExp = localStorage.getItem('indus_expenses');
+    if (savedExp) {
+      const list = JSON.parse(savedExp);
+      setTotalExpenses(list.reduce((acc, e) => acc + e.amount, 0));
+    }
+    const savedSal = localStorage.getItem('indus_salaries');
+    if (savedSal) {
+      const list = JSON.parse(savedSal);
+      setTotalSalaries(list.reduce((acc, s) => acc + s.amount, 0));
+    }
+  }, []);
+
+  const netProfit = (summary.total_revenue || 0) - totalExpenses - totalSalaries;
+
   return (
     <div className="page-body animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -60,29 +77,53 @@ const Reports = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid-cols-3" style={{ marginBottom: '2.5rem' }}>
-        <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Total Revenue</span>
-          <div style={{ fontSize: '2.2rem', fontWeight: '800', color: '#10b981', margin: '0.5rem 0' }}>
+      <div className="grid-cols-4" style={{ marginBottom: '2.5rem' }}>
+        <div className="glass-card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Gross Sales</span>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#10b981', margin: '0.4rem 0' }}>
             Rs. {summary.total_revenue?.toLocaleString()}
           </div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>From {summary.total_orders} completed transactions</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{summary.total_orders} settled invoices</span>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Total Paid Orders</span>
-          <div style={{ fontSize: '2.2rem', fontWeight: '800', color: '#818cf8', margin: '0.5rem 0' }}>
-            {summary.total_orders}
+        <div className="glass-card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Operating Costs</span>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--danger)', margin: '0.4rem 0' }}>
+            Rs. {totalExpenses.toLocaleString()}
           </div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Successfully settled tables & takeaways</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Utilities & ingredient supply</span>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%)', borderColor: 'rgba(236, 72, 153, 0.3)' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Average Order Value</span>
-          <div style={{ fontSize: '2.2rem', fontWeight: '800', color: '#f472b6', margin: '0.5rem 0' }}>
-            Rs. {summary.average_order_value?.toLocaleString()}
+        <div className="glass-card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Paid Payroll</span>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#818cf8', margin: '0.4rem 0' }}>
+            Rs. {totalSalaries.toLocaleString()}
           </div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Average spend per customer bill</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Disbursed staff salaries</span>
+        </div>
+
+        <div 
+          className="glass-card" 
+          style={{ 
+            padding: '1.25rem', 
+            background: netProfit >= 0 
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.08) 100%)'
+              : 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.08) 100%)',
+            borderColor: netProfit >= 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'
+          }}
+        >
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Net Profit</span>
+          <div 
+            style={{ 
+              fontSize: '1.8rem', 
+              fontWeight: '800', 
+              color: netProfit >= 0 ? '#10b981' : 'var(--danger)', 
+              margin: '0.4rem 0' 
+            }}
+          >
+            Rs. {netProfit.toLocaleString()}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Calculated bottom line</span>
         </div>
       </div>
 

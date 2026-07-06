@@ -11,6 +11,8 @@ import Billing from './pages/admin/Billing';
 import MenuManager from './pages/admin/MenuManager';
 import Reports from './pages/admin/Reports';
 import UsersManager from './pages/admin/UsersManager';
+import TablesManager from './pages/admin/TablesManager';
+import ExpensesManager from './pages/admin/ExpensesManager';
 
 // Waiter Pages
 import WaiterDashboard from './pages/waiter/WaiterDashboard';
@@ -54,6 +56,8 @@ const App = () => {
       case 'pos': return user.role === 'cashier' ? '🖥️ Takeaway POS Terminal' : '🖥️ Admin Point of Sale Terminal';
       case 'billing': return '🧾 Open Table Billing & Settlement';
       case 'menu': return '🍽️ Pakistani Cuisine Menu Manager';
+      case 'tables': return '🪑 Restaurant Tables Configuration';
+      case 'expenses': return '💸 Expenses & Payroll Management';
       case 'reports': return '📈 Sales & Revenue Reports';
       case 'users': return '👥 Staff Users & Role Permissions';
       case 'new_order': return '📝 Take New Table Order';
@@ -68,6 +72,8 @@ const App = () => {
         case 'pos': return <Pos />;
         case 'billing': return <Billing />;
         case 'menu': return <MenuManager />;
+        case 'tables': return <TablesManager />;
+        case 'expenses': return <ExpensesManager />;
         case 'reports': return <Reports />;
         case 'users': return <UsersManager />;
         default: return <AdminDashboard setActiveTab={setActiveTab} />;

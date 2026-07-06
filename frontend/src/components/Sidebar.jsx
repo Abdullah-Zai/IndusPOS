@@ -11,6 +11,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'pos', label: 'Admin POS', icon: '🖥️' },
     { id: 'billing', label: 'Open Billing', icon: '🧾' },
     { id: 'menu', label: 'Menu Manager', icon: '🍽️' },
+    { id: 'tables', label: 'Manage Tables', icon: '🪑' },
+    { id: 'expenses', label: 'Expenses & Payroll', icon: '💸' },
     { id: 'reports', label: 'Sales Reports', icon: '📈' },
     { id: 'users', label: 'Staff Users', icon: '👥' },
   ];
