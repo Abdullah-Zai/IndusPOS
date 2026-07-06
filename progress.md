@@ -28,6 +28,7 @@ This document records the completed and upcoming features for the modern Indus P
 - Cashiers and Admins can now edit bills on checkout inside **Billing.jsx** (increment, decrement, or delete order items).
 - Support for flat PKR or percentage-based **Discounts** and **Tax (GST)** calculation inputs.
 - Beautiful printer-friendly Tax Invoice layout showing custom invoice numbers, order type, order time, waiter table numbers, and rider details.
+- Integrated options upon order booking to **Print Bill** (opens a clean, dedicated monospace receipt printer template layout) or **Save Only** (commits transaction to database and returns to terminal).
 
 ### 6. Dynamic Financial Analytics & Monthly P&L
 - Integrated operational costs and salaries into the admin **AdminDashboard.jsx** statistics and **FinancialHub.jsx** sales summaries.
