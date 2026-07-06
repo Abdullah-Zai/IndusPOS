@@ -68,8 +68,8 @@ const WaiterDashboard = ({ setActiveTab }) => {
         </div>
       ) : (
         <div className="grid-cols-3">
-          {orders.map(order => (
-            <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} showActions={true} />
+          {orders.map((order, index) => (
+            <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} showActions={true} staggerIndex={index} />
           ))}
         </div>
       )}

@@ -85,8 +85,8 @@ const KitchenDashboard = () => {
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Please start preparation immediately</span>
               </div>
               <div className="grid-cols-4">
-                {pendingOrders.map(order => (
-                  <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} showActions={true} />
+                {pendingOrders.map((order, index) => (
+                  <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} showActions={true} staggerIndex={index} />
                 ))}
               </div>
             </div>
@@ -100,8 +100,8 @@ const KitchenDashboard = () => {
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Click "Mark Ready" when plated</span>
               </div>
               <div className="grid-cols-4">
-                {preparingOrders.map(order => (
-                  <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} showActions={true} />
+                {preparingOrders.map((order, index) => (
+                  <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} showActions={true} staggerIndex={index} />
                 ))}
               </div>
             </div>

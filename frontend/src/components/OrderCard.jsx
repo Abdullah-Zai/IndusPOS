@@ -1,6 +1,6 @@
 import React from 'react';
 
-const OrderCard = ({ order, onUpdateStatus, onBillOrder, showActions = true }) => {
+const OrderCard = ({ order, onUpdateStatus, onBillOrder, showActions = true, staggerIndex }) => {
   const getStatusBadge = (status) => {
     switch(status) {
       case 'pending': return <span className="badge badge-warning">⏳ Pending</span>;
@@ -12,8 +12,10 @@ const OrderCard = ({ order, onUpdateStatus, onBillOrder, showActions = true }) =
     }
   };
 
+  const staggerClass = staggerIndex !== undefined ? `stagger-${(staggerIndex % 5) + 1}` : '';
+
   return (
-    <div className="glass-card animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className={`glass-card animate-fade-in ${staggerClass}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <div className="glass-header" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -83,8 +83,8 @@ const Billing = () => {
         </div>
       ) : (
         <div className="grid-cols-3">
-          {orders.map(order => (
-            <OrderCard key={order.id} order={order} onBillOrder={handleBillOrder} />
+          {orders.map((order, index) => (
+            <OrderCard key={order.id} order={order} onBillOrder={handleBillOrder} staggerIndex={index} />
           ))}
         </div>
       )}

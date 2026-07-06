@@ -112,8 +112,8 @@ const AdminDashboard = ({ setActiveTab }) => {
         </div>
       ) : (
         <div className="grid-cols-3">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} />
+          {orders.map((order, index) => (
+            <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} staggerIndex={index} />
           ))}
         </div>
       )}

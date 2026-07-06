@@ -114,8 +114,8 @@ const CashierDashboard = ({ setActiveTab }) => {
         </div>
       ) : (
         <div className="grid-cols-3">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} onBillOrder={() => setActiveTab('billing')} />
+          {orders.map((order, index) => (
+            <OrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} onBillOrder={() => setActiveTab('billing')} staggerIndex={index} />
           ))}
         </div>
       )}
