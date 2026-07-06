@@ -107,6 +107,32 @@ const Billing = () => {
     }
   };
 
+  const handlePrintReceipt = () => {
+    const printContent = document.getElementById('billing-receipt-print-area').innerHTML;
+    const printWindow = window.open('', '', 'width=600,height=800');
+    printWindow.document.write('<html><head><title>Print Invoice</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+      body { font-family: monospace; padding: 20px; color: #000; background: #fff; }
+      .receipt-title { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
+      .receipt-subtitle { font-size: 0.85rem; text-align: center; color: #555; margin-bottom: 20px; }
+      .receipt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.85rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+      .receipt-items { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+      .receipt-item { display: flex; justify-content: space-between; }
+      .receipt-breakdown { display: flex; flex-direction: column; gap: 5px; font-size: 0.85rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+      .receipt-total { display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; margin-top: 10px; color: #000; }
+      .receipt-footer { text-align: center; font-size: 0.8rem; margin-top: 30px; color: #555; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+    setReceipt(null);
+  };
+
   return (
     <div className="page-body animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -295,60 +321,68 @@ const Billing = () => {
         onClose={() => setReceipt(null)} 
         title="🎉 Invoice Settled Successfully!"
         footer={
-          <button onClick={() => setReceipt(null)} className="btn btn-primary">Done & Close</button>
+          <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+            <button onClick={handlePrintReceipt} className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
+              🖨️ Print Bill
+            </button>
+            <button onClick={() => setReceipt(null)} className="btn btn-secondary" style={{ flex: 1 }}>
+              💾 Save Only
+            </button>
+          </div>
         }
       >
         {receipt && (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🧾</div>
-            <h2 style={{ fontSize: '1.6rem', color: 'var(--text-primary)' }}>INDUS HOTEL</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Tax Invoice • Invoice #{receipt.bill_number}</p>
             
-            <div style={{ margin: '1.25rem 0', padding: '1rem', background: 'var(--bg-table-row)', borderRadius: 'var(--radius-md)', textAlign: 'left' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+            <div id="billing-receipt-print-area">
+              <div className="receipt-title">INDUS HOTEL</div>
+              <div className="receipt-subtitle">Tax Invoice • Invoice #{receipt.bill_number}</div>
+              
+              <div className="receipt-grid">
                 <div>Type: <b>{receipt.order_type.toUpperCase().replace('_', ' ')}</b></div>
                 <div>Method: <b>{receipt.payment_method}</b></div>
                 <div>{receipt.order_type === 'delivery' ? 'Rider: ' : 'Table: '}<b>{receipt.table_no || '—'}</b></div>
                 <div>Time: <b>{new Date(receipt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</b></div>
               </div>
               
-              <hr style={{ borderColor: 'var(--border-color)', margin: '0.75rem 0' }} />
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              <div className="receipt-items">
                 {receipt.items?.map((it, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <div key={i} className="receipt-item">
                     <span>{it.quantity}x {it.item_name} {it.variant ? `(${it.variant})` : ''}</span>
                     <span>Rs. {(Number(it.price_at_time) * it.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
               
-              <hr style={{ borderColor: 'var(--border-color)', margin: '0.75rem 0' }} />
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div className="receipt-breakdown">
+                <div style={{ display: 'flex', justifycontent: 'space-between' }}>
                   <span>Subtotal:</span>
                   <span>Rs. {receipt.subtotal?.toLocaleString()}</span>
                 </div>
                 {receipt.discount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--danger)' }}>
+                  <div style={{ display: 'flex', justifycontent: 'space-between', color: '#ff3b30' }}>
                     <span>Discount:</span>
                     <span>- Rs. {receipt.discount?.toLocaleString()}</span>
                   </div>
                 )}
                 {receipt.tax > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', justifycontent: 'space-between' }}>
                     <span>GST Tax:</span>
                     <span>+ Rs. {receipt.tax?.toLocaleString()}</span>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: '800', color: '#10b981', borderTop: '1px dashed var(--border-color)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                  <span>Grand Total:</span>
-                  <span>Rs. {receipt.total_amount?.toLocaleString()}</span>
-                </div>
+              </div>
+
+              <div className="receipt-total">
+                <span>Grand Total:</span>
+                <span>Rs. {receipt.total_amount?.toLocaleString()}</span>
+              </div>
+              
+              <div className="receipt-footer">
+                Thank you for dining with Indus Hotel!
               </div>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Thank you for dining with Indus Hotel!</p>
           </div>
         )}
       </Modal>

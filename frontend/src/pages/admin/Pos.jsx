@@ -143,6 +143,31 @@ const Pos = () => {
     }
   };
 
+  const handlePrintReceipt = () => {
+    const printContent = document.getElementById('pos-receipt-print-area').innerHTML;
+    const printWindow = window.open('', '', 'width=600,height=800');
+    printWindow.document.write('<html><head><title>Print Receipt</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+      body { font-family: monospace; padding: 20px; color: #000; background: #fff; }
+      .receipt-title { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
+      .receipt-subtitle { font-size: 0.85rem; text-align: center; color: #555; margin-bottom: 20px; }
+      .receipt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.85rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+      .receipt-items { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+      .receipt-item { display: flex; justify-content: space-between; }
+      .receipt-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px; }
+      .receipt-footer { text-align: center; font-size: 0.8rem; margin-top: 30px; color: #555; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+    setReceiptModal(null);
+  };
+
   return (
     <div className="page-body animate-fade-in" style={{ padding: '1.5rem' }}>
       <div className="pos-layout">
@@ -188,10 +213,10 @@ const Pos = () => {
             maxHeight: 'calc(100vh - 270px)',
             paddingRight: '0.5rem' 
           }}>
-            {filteredItems.map(item => (
+            {filteredItems.map((item, idx) => (
               <div 
                 key={item.id} 
-                className="glass-card" 
+                className="glass-card item-card animate-scale-up" 
                 onClick={() => addToCart(item)}
                 style={{ 
                   cursor: 'pointer', 
@@ -199,7 +224,8 @@ const Pos = () => {
                   flexDirection: 'column', 
                   overflow: 'hidden', 
                   position: 'relative',
-                  border: '1px solid var(--border-color)'
+                  border: '1px solid var(--border-color)',
+                  animationDelay: `${idx * 20}ms`
                 }}
               >
                 <div style={{ height: '120px', background: '#1e293b', position: 'relative', overflow: 'hidden' }}>
@@ -308,8 +334,8 @@ const Pos = () => {
               </div>
             ) : (
               cart.map(item => (
-                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.65rem 0.8rem', background: 'var(--bg-table-row)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-                  <div style={{ flex: 1 }}>
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.75rem', background: 'var(--bg-table-row)', borderRadius: 'var(--radius-sm)' }}>
+                  <div>
                     <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{item.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>
                       {item.variant ? `${item.variant} • ` : ''}Rs. {Number(item.price).toLocaleString()}
@@ -363,39 +389,48 @@ const Pos = () => {
         onClose={() => setReceiptModal(null)} 
         title="🎉 Order Billed Successfully!"
         footer={
-          <button onClick={() => setReceiptModal(null)} className="btn btn-primary">
-            Close & Start New Order
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+            <button onClick={handlePrintReceipt} className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
+              🖨️ Print Bill
+            </button>
+            <button onClick={() => setReceiptModal(null)} className="btn btn-secondary" style={{ flex: 1 }}>
+              💾 Save Only
+            </button>
+          </div>
         }
       >
         {receiptModal && (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🧾</div>
-            <h2 style={{ fontSize: '1.6rem', color: 'var(--text-primary)' }}>INDUS HOTEL</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Official POS Receipt • Order #{receiptModal.order_number}</p>
             
-            <div style={{ margin: '1.5rem 0', padding: '1rem', background: 'var(--bg-table-row)', borderRadius: 'var(--radius-md)', textAlign: 'left' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                <span>Type: <b>{receiptModal.order_type.toUpperCase()}</b></span>
-                {receiptModal.table_no && <span>Table: <b>{receiptModal.table_no}</b></span>}
-                <span>Date: <b>{receiptModal.business_date}</b></span>
+            <div id="pos-receipt-print-area">
+              <div className="receipt-title">INDUS HOTEL</div>
+              <div className="receipt-subtitle">Official POS Receipt • Order #{receiptModal.order_number}</div>
+              
+              <div className="receipt-grid">
+                <div>Type: <b>{receiptModal.order_type.toUpperCase()}</b></div>
+                <div>Date: <b>{receiptModal.business_date}</b></div>
+                {receiptModal.table_no && <div style={{ gridColumn: 'span 2' }}>Table/Rider: <b>{receiptModal.table_no}</b></div>}
               </div>
-              <hr style={{ borderColor: 'var(--border-color)', margin: '0.75rem 0' }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              
+              <div className="receipt-items">
                 {receiptModal.items?.map((it, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <div key={i} className="receipt-item">
                     <span>{it.quantity}x {it.item_name} {it.variant ? `(${it.variant})` : ''}</span>
                     <span>Rs. {(Number(it.price_at_time) * it.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
-              <hr style={{ borderColor: 'var(--border-color)', margin: '0.75rem 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: '800', color: '#10b981' }}>
+              
+              <div className="receipt-total">
                 <span>Total Paid:</span>
                 <span>Rs. {receiptModal.total_amount?.toLocaleString()}</span>
               </div>
+              
+              <div className="receipt-footer">
+                Thank you for dining with Indus Hotel!
+              </div>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Thank you for dining with Indus Hotel!</p>
           </div>
         )}
       </Modal>
