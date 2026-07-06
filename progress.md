@@ -15,9 +15,9 @@ This document records the completed and upcoming features for the modern Indus P
 - Created **TablesManager.jsx** allowing the Owner (Admin) to view, add, configure capacity, and toggle the active status of restaurant dining tables.
 - Saved table layout configurations to `localStorage` key `indus_tables`.
 
-### 3. Expenses & Staff Payroll Console
-- Created **ExpensesManager.jsx** supporting utility bills (Gas, Electricity), restaurant stock (Oil, Chicken), custom added operational expense categories, and employee payroll distribution.
-- Saved expenses and payroll logs to `localStorage` keys `indus_expenses`, `indus_salaries`, and `indus_expense_categories`.
+### 3. Unified Financial Console & Expenses (Financial Hub)
+- Created **FinancialHub.jsx** (merging and replacing the separate reports and expenses manager components) with subtabs for Sales Analytics, Operating Costs & Payroll, and Monthly Profit & Loss Ledger.
+- Saved expenses and payroll logs to `localStorage` keys `indus_expenses` and `indus_salaries`.
 
 ### 4. Interactive POS Selection (Tables & Rider Assigning)
 - Deployed dynamic table selector dropdowns inside the admin **Pos.jsx** and waiter **NewOrder.jsx** layouts (loading tables dynamically from `localStorage`).
@@ -29,9 +29,10 @@ This document records the completed and upcoming features for the modern Indus P
 - Support for flat PKR or percentage-based **Discounts** and **Tax (GST)** calculation inputs.
 - Beautiful printer-friendly Tax Invoice layout showing custom invoice numbers, order type, order time, waiter table numbers, and rider details.
 
-### 6. Dynamic Financial Analytics (Net Profit)
-- Integrated operational costs and salaries into the admin **Reports.jsx** and **AdminDashboard.jsx** statistics.
-- Sales summaries now dynamically calculate and display **Gross Sales**, **Operating Costs**, **Paid Payroll**, and final **Net Profit**.
+### 6. Dynamic Financial Analytics & Monthly P&L
+- Integrated operational costs and salaries into the admin **AdminDashboard.jsx** statistics and **FinancialHub.jsx** sales summaries.
+- Created the **Monthly Profit & Loss Ledger** in `FinancialHub.jsx` combining database-driven monthly sales revenue with local storage operational costs and payroll records.
+- Seeded default Pakistani Desi menu categories and items (Chicken Karahi, Mutton Karahi, Biryani, Naan, Lassi, Mint Margarita) automatically on API startup.
 
 ---
 
