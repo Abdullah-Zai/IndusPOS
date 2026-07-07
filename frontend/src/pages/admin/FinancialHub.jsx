@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 const FinancialHub = () => {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
+  const isCashier = user?.role === 'cashier';
   const [activeTab, setActiveTab] = useState('sales'); // sales, expenses, profit_loss
   const [activeSubTab, setActiveSubTab] = useState('exp_list'); // exp_list, sal_list, exp_form, sal_form, cat_form
 
@@ -272,19 +273,21 @@ const FinancialHub = () => {
         >
           📈 Sales Analytics
         </button>
-        <button 
-          onClick={() => setActiveTab('expenses')} 
-          className={`btn ${activeTab === 'expenses' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-        >
-          💸 Operating Costs & Payroll
-        </button>
+        {!isCashier && (
+          <button 
+            onClick={() => setActiveTab('expenses')} 
+            className={`btn ${activeTab === 'expenses' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            💸 Operating Costs &amp; Payroll
+          </button>
+        )}
         <button 
           onClick={() => setActiveTab('profit_loss')} 
           className={`btn ${activeTab === 'profit_loss' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
         >
-          📅 Monthly Profit & Loss
+          📅 Monthly Profit &amp; Loss
         </button>
       </div>
 

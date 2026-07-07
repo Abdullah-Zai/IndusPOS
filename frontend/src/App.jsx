@@ -96,6 +96,10 @@ const App = () => {
         case 'dashboard': return <CashierDashboard setActiveTab={setActiveTab} />;
         case 'pos': return <Pos />;
         case 'billing': return <Billing />;
+        case 'menu': return <MenuManager />;
+        case 'tables': return <TablesManager />;
+        case 'inventory': return <InventoryManager />;
+        case 'financials': return <FinancialHub />;
         default: return <CashierDashboard setActiveTab={setActiveTab} />;
       }
     }

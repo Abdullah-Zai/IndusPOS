@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const TablesManager = () => {
+  const { user } = useAuth();
   const [tables, setTables] = useState([]);
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState(4);
@@ -21,31 +23,56 @@ const TablesManager = () => {
   useEffect(() => {
     const saved = localStorage.getItem('indus_tables');
     if (saved) {
-      // Ensure all loaded tables have an area property
+      // Ensure all loaded tables have an area property and short codes for names if they have legacy "Table X" names
       const parsed = JSON.parse(saved).map((t, idx) => {
-        if (!t.area) {
-          let area = 'Main Hall';
+        let area = t.area;
+        if (!area) {
+          area = 'Main Hall';
           if (idx < 3) area = 'Family Hall';
           else if (idx < 6) area = 'Rooftop';
           else if (idx < 8) area = 'Mens Section';
-          return { ...t, area };
         }
-        return t;
+        
+        let name = t.name;
+        if (name.startsWith('Table ')) {
+          const num = parseInt(name.replace('Table ', '')) || (idx + 1);
+          if (area === 'Family Hall') {
+            name = `FH ${num <= 3 ? num : idx + 1}`;
+          } else if (area === 'Rooftop') {
+            name = `RF ${num > 3 && num <= 6 ? num - 3 : idx + 1}`;
+          } else if (area === 'Mens Section') {
+            name = `MS ${num > 6 && num <= 8 ? num - 6 : idx + 1}`;
+          } else {
+            name = `G ${num > 8 ? num - 8 : idx + 1}`;
+          }
+        }
+        return { ...t, name, area };
       });
       setTables(parsed);
       localStorage.setItem('indus_tables', JSON.stringify(parsed));
     } else {
-      // Default Tables 1 to 10
+      // Default Tables 1 to 10 with short codes
       const defaults = [];
       for (let i = 1; i <= 10; i++) {
         let area = 'Main Hall';
-        if (i <= 3) area = 'Family Hall';
-        else if (i <= 6) area = 'Rooftop';
-        else if (i <= 8) area = 'Mens Section';
+        let name = '';
+        if (i <= 3) {
+          area = 'Family Hall';
+          name = `FH ${i}`;
+        } else if (i <= 6) {
+          area = 'Rooftop';
+          name = `RF ${i - 3}`;
+        } else if (i <= 8) {
+          area = 'Mens Section';
+          name = `MS ${i - 6}`;
+        } else {
+          area = 'Main Hall';
+          name = `G ${i - 8}`;
+        }
         
         defaults.push({
           id: i,
-          name: `Table ${i}`,
+          name: name,
           capacity: 4,
           area: area,
           status: 'available', // available, occupied, reserved
@@ -64,17 +91,23 @@ const TablesManager = () => {
 
   const handleAddTable = (e) => {
     e.preventDefault();
-    if (!newTableName.trim()) return;
-    const exists = tables.some(t => t.name.toLowerCase() === newTableName.trim().toLowerCase());
+    const trimmedName = newTableName.trim();
+    if (!trimmedName) return alert('⚠️ Table name is required!');
+    if (trimmedName.length < 2) return alert('⚠️ Table name must be at least 2 characters!');
+
+    const cap = parseInt(newCapacity);
+    if (isNaN(cap) || cap < 1 || cap > 50) return alert('⚠️ Capacity must be between 1 and 50 guests!');
+
+    const exists = tables.some(t => t.name.toLowerCase() === trimmedName.toLowerCase());
     if (exists) {
-      alert('Table name already exists!');
+      alert('⚠️ A table with this name already exists!');
       return;
     }
 
     const newTable = {
       id: Date.now(),
-      name: newTableName.trim(),
-      capacity: parseInt(newCapacity) || 4,
+      name: trimmedName,
+      capacity: cap,
       area: newArea,
       status: 'available',
       isActive: true
@@ -111,16 +144,21 @@ const TablesManager = () => {
 
   const handleSaveEdit = (e) => {
     e.preventDefault();
-    if (!editName.trim()) return;
+    const trimmedName = editName.trim();
+    if (!trimmedName) return alert('⚠️ Table name is required!');
+    if (trimmedName.length < 2) return alert('⚠️ Table name must be at least 2 characters!');
 
-    const exists = tables.some(t => t.id !== editingTable.id && t.name.toLowerCase() === editName.trim().toLowerCase());
+    const cap = parseInt(editCapacity);
+    if (isNaN(cap) || cap < 1 || cap > 50) return alert('⚠️ Capacity must be between 1 and 50 guests!');
+
+    const exists = tables.some(t => t.id !== editingTable.id && t.name.toLowerCase() === trimmedName.toLowerCase());
     if (exists) {
-      alert('Table name already exists!');
+      alert('⚠️ A table with this name already exists!');
       return;
     }
 
     const updated = tables.map(t => t.id === editingTable.id 
-      ? { ...t, name: editName.trim(), capacity: parseInt(editCapacity) || 4, area: editArea } 
+      ? { ...t, name: trimmedName, capacity: cap, area: editArea } 
       : t
     );
     saveTables(updated);
@@ -158,102 +196,104 @@ const TablesManager = () => {
         </div>
       </div>
 
-      <div className="tables-manager-grid">
+      <div className="tables-manager-grid" style={{ gridTemplateColumns: user?.role === 'cashier' ? '1fr' : undefined }}>
         {/* Left: Add / Edit Form */}
-        <div>
-          <div className="glass-card" style={{ padding: '1.5rem', position: 'sticky', top: '2rem' }}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '1.25rem' }}>
-              {editingTable ? '📝 Edit Table Details' : '➕ Add Dining Table'}
-            </h3>
-            
-            {editingTable ? (
-              <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Table Name/No.</label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="form-control"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Area</label>
-                  <select
-                    className="form-select"
-                    value={editArea}
-                    onChange={(e) => setEditArea(e.target.value)}
-                  >
-                    {areas.map(area => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
-                </div>
+        {user?.role !== 'cashier' && (
+          <div>
+            <div className="glass-card" style={{ padding: '1.5rem', position: 'sticky', top: '2rem' }}>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '1.25rem' }}>
+                {editingTable ? '📝 Edit Table Details' : '➕ Add Dining Table'}
+              </h3>
+              
+              {editingTable ? (
+                <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Table Name/No.</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="form-control"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Area</label>
+                    <select
+                      className="form-select"
+                      value={editArea}
+                      onChange={(e) => setEditArea(e.target.value)}
+                    >
+                      {areas.map(area => (
+                        <option key={area} value={area}>{area}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Capacity (Guests)</label>
-                  <input
-                    type="number"
-                    value={editCapacity}
-                    onChange={(e) => setEditCapacity(e.target.value)}
-                    min="1"
-                    max="50"
-                    className="form-control"
-                    required
-                  />
-                </div>
-                
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
-                  <button type="button" onClick={() => setEditingTable(null)} className="btn btn-secondary">Cancel</button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleAddTable} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Table Name/No. (e.g. Table 11)</label>
-                  <input
-                    type="text"
-                    value={newTableName}
-                    onChange={(e) => setNewTableName(e.target.value)}
-                    placeholder="Enter table designation"
-                    className="form-control"
-                    required
-                  />
-                </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Capacity (Guests)</label>
+                    <input
+                      type="number"
+                      value={editCapacity}
+                      onChange={(e) => setEditCapacity(e.target.value)}
+                      min="1"
+                      max="50"
+                      className="form-control"
+                      required
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
+                    <button type="button" onClick={() => setEditingTable(null)} className="btn btn-secondary">Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleAddTable} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Table Name/No. (e.g. Table 11)</label>
+                    <input
+                      type="text"
+                      value={newTableName}
+                      onChange={(e) => setNewTableName(e.target.value)}
+                      placeholder="Enter table designation"
+                      className="form-control"
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Area</label>
-                  <select
-                    className="form-select"
-                    value={newArea}
-                    onChange={(e) => setNewArea(e.target.value)}
-                  >
-                    {areas.map(area => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Area</label>
+                    <select
+                      className="form-select"
+                      value={newArea}
+                      onChange={(e) => setNewArea(e.target.value)}
+                    >
+                      {areas.map(area => (
+                        <option key={area} value={area}>{area}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Capacity</label>
-                  <input
-                    type="number"
-                    value={newCapacity}
-                    onChange={(e) => setNewCapacity(e.target.value)}
-                    min="1"
-                    max="50"
-                    className="form-control"
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>➕ Add Table</button>
-              </form>
-            )}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Capacity</label>
+                    <input
+                      type="number"
+                      value={newCapacity}
+                      onChange={(e) => setNewCapacity(e.target.value)}
+                      min="1"
+                      max="50"
+                      className="form-control"
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>➕ Add Table</button>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right: Tables Grid */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -355,26 +395,29 @@ const TablesManager = () => {
                           onClick={() => handleToggleActive(table.id)}
                           className={`btn ${table.isActive ? 'btn-success' : 'btn-secondary'}`}
                           style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', height: 'auto', background: table.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: table.isActive ? 'var(--success)' : 'var(--danger)', border: 'none' }}
+                          disabled={user?.role === 'cashier'}
                         >
                           {table.isActive ? 'Active' : 'Disabled'}
                         </button>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button 
-                          onClick={() => startEdit(table)}
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset' }}
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteTable(table.id)}
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset', color: 'var(--danger)' }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
+                      {user?.role !== 'cashier' && (
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button 
+                            onClick={() => startEdit(table)}
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset' }}
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteTable(table.id)}
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset', color: 'var(--danger)' }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

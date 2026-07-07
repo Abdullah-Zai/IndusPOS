@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 
 const MenuManager = () => {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +78,13 @@ const MenuManager = () => {
 
   const handleSaveItem = async (e) => {
     e.preventDefault();
+    // Validation
+    if (!formData.name.trim()) return alert('⚠️ Item name is required!');
+    if (formData.name.trim().length < 2) return alert('⚠️ Item name must be at least 2 characters!');
+    if (!formData.category_id) return alert('⚠️ Please select a category!');
+    if (!formData.price || Number(formData.price) <= 0) return alert('⚠️ Price must be greater than Rs. 0!');
+    if (Number(formData.price) > 99999) return alert('⚠️ Price seems unrealistically high (max Rs. 99,999)!');
+
     try {
       const url = editItem ? `/api/menu/items/${editItem.id}` : '/api/menu/items';
       const method = editItem ? 'PUT' : 'POST';
@@ -169,14 +176,16 @@ const MenuManager = () => {
           <h3>🍽️ Pakistani Cuisine Menu Manager</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage food items, categories, variants, and pricing.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={() => setCatModal(true)} className="btn btn-secondary">
-            📁 Manage Categories
-          </button>
-          <button onClick={openAddItem} className="btn btn-primary">
-            ➕ Add Menu Item
-          </button>
-        </div>
+        {user?.role !== 'cashier' && (
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button onClick={() => setCatModal(true)} className="btn btn-secondary">
+              📁 Manage Categories
+            </button>
+            <button onClick={openAddItem} className="btn btn-primary">
+              ➕ Add Menu Item
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Category Tabs */}
@@ -211,7 +220,7 @@ const MenuManager = () => {
               <th>Variant</th>
               <th>Price</th>
               <th>Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
+              {user?.role !== 'cashier' && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -236,10 +245,12 @@ const MenuManager = () => {
                       <span className="badge badge-danger">Out of Stock</span>
                     )}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button onClick={() => openEditItem(item)} className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem', marginRight: '0.5rem' }}>✏️ Edit</button>
-                    <button onClick={() => handleDeleteItem(item.id)} className="btn btn-danger" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}>🗑️ Delete</button>
-                  </td>
+                  {user?.role !== 'cashier' && (
+                    <td style={{ textAlign: 'right' }}>
+                      <button onClick={() => openEditItem(item)} className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem', marginRight: '0.5rem' }}>✏️ Edit</button>
+                      <button onClick={() => handleDeleteItem(item.id)} className="btn btn-danger" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}>🗑️ Delete</button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

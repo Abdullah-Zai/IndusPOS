@@ -26,10 +26,21 @@ const NewOrder = ({ setActiveTab }) => {
       const defaults = [];
       for (let i = 1; i <= 10; i++) {
         let area = 'Main Hall';
-        if (i <= 3) area = 'Family Hall';
-        else if (i <= 6) area = 'Rooftop';
-        else if (i <= 8) area = 'Mens Section';
-        defaults.push({ id: i, name: `Table ${i}`, capacity: 4, area: area, status: 'available', isActive: true });
+        let name = '';
+        if (i <= 3) {
+          area = 'Family Hall';
+          name = `FH ${i}`;
+        } else if (i <= 6) {
+          area = 'Rooftop';
+          name = `RF ${i - 3}`;
+        } else if (i <= 8) {
+          area = 'Mens Section';
+          name = `MS ${i - 6}`;
+        } else {
+          area = 'Main Hall';
+          name = `G ${i - 8}`;
+        }
+        defaults.push({ id: i, name: name, capacity: 4, area: area, status: 'available', isActive: true });
       }
       localStorage.setItem('indus_tables', JSON.stringify(defaults));
       setTables(defaults);
@@ -81,8 +92,9 @@ const NewOrder = ({ setActiveTab }) => {
   const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
 
   const handleSubmitOrder = async () => {
-    if (!tableNo.trim()) return alert('⚠️ Table Number is required!');
-    if (cart.length === 0) return alert('Cart is empty!');
+    if (!tableNo.trim()) return alert('⚠️ Please select a table before placing the order!');
+    if (cart.length === 0) return alert('⚠️ Cart is empty! Please add at least one item to the order.');
+    if (totalAmount <= 0) return alert('⚠️ Order total must be greater than Rs. 0!');
 
     setLoading(true);
     try {

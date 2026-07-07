@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const InventoryManager = () => {
+  const { user } = useAuth();
   const [inventory, setInventory] = useState([]);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Dry Ingredients');
@@ -51,10 +53,13 @@ const InventoryManager = () => {
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    if (!name.trim() || !quantity || !purchasePrice) {
-      alert('⚠️ Name, quantity, and purchase price are required!');
-      return;
-    }
+    if (!name.trim()) return alert('⚠️ Product name is required!');
+    if (name.trim().length < 2) return alert('⚠️ Product name must be at least 2 characters!');
+    if (!quantity) return alert('⚠️ Quantity is required!');
+    if (parseFloat(quantity) <= 0) return alert('⚠️ Quantity must be greater than 0!');
+    if (!purchasePrice) return alert('⚠️ Purchase price is required!');
+    if (parseFloat(purchasePrice) <= 0) return alert('⚠️ Purchase price must be greater than 0!');
+    if (!purchaseDate) return alert('⚠️ Purchase date is required!');
 
     const newItem = {
       id: Date.now(),
@@ -359,12 +364,18 @@ const InventoryManager = () => {
                         {item.description || '—'}
                       </td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <button onClick={() => startEdit(item)} className="btn btn-secondary" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', marginRight: '0.4rem' }}>
-                          ✏️ Edit
-                        </button>
-                        <button onClick={() => handleDeleteItem(item.id)} className="btn btn-danger" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}>
-                          🗑️ Delete
-                        </button>
+                        {user?.role === 'admin' ? (
+                          <>
+                            <button onClick={() => startEdit(item)} className="btn btn-secondary" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', marginRight: '0.4rem' }}>
+                              ✏️ Edit
+                            </button>
+                            <button onClick={() => handleDeleteItem(item.id)} className="btn btn-danger" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}>
+                              🗑️ Delete
+                            </button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Restricted</span>
+                        )}
                       </td>
                     </tr>
                   ))

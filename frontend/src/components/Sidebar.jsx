@@ -31,6 +31,10 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'pos', label: 'Takeaway POS', icon: '🖥️' },
     { id: 'billing', label: 'Settle Bills', icon: '🧾' },
+    { id: 'menu', label: 'Menu List', icon: '🍽️' },
+    { id: 'tables', label: 'Tables Status', icon: '🪑' },
+    { id: 'inventory', label: 'Inventory Stash', icon: '📦' },
+    { id: 'financials', label: 'Sales & Ledger', icon: '💰' },
   ];
 
   let links = [];
