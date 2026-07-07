@@ -12,7 +12,7 @@ def get_sales_summary(
     start_date: Optional[str] = Query(None, description="YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="YYYY-MM-DD"),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.require_roles(["admin"]))
+    current_user: models.User = Depends(auth.require_roles(["admin", "cashier"]))
 ):
     query = db.query(models.Bill).join(models.Order)
     if start_date:
@@ -95,3 +95,18 @@ def get_monthly_sales(
         {"month": m, "revenue": round(rev, 2)}
         for m, rev in sorted(monthly_data.items(), reverse=True)
     ]
+
+@router.post("/reset")
+def reset_database(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_roles(["admin"]))
+):
+    try:
+        db.query(models.Bill).delete()
+        db.query(models.OrderItem).delete()
+        db.query(models.Order).delete()
+        db.commit()
+        return {"status": "success", "message": "Transaction logs and orders reset successfully."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

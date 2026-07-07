@@ -37,6 +37,11 @@ app.include_router(orders_router.router)
 app.include_router(users_router.router)
 app.include_router(reports_router.router)
 
+from fastapi.staticfiles import StaticFiles
+import os
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/")
 def root():
     return {

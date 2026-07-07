@@ -9,6 +9,7 @@ const AdminDashboard = ({ setActiveTab }) => {
   const [loading, setLoading] = useState(true);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalSalaries, setTotalSalaries] = useState(0);
+  const [totalInventory, setTotalInventory] = useState(0);
 
   const loadData = async () => {
     try {
@@ -44,9 +45,14 @@ const AdminDashboard = ({ setActiveTab }) => {
       const list = JSON.parse(savedSal);
       setTotalSalaries(list.reduce((acc, s) => acc + s.amount, 0));
     }
+    const savedInv = localStorage.getItem('indus_inventory');
+    if (savedInv) {
+      const list = JSON.parse(savedInv);
+      setTotalInventory(list.reduce((acc, item) => acc + item.purchasePrice, 0));
+    }
   }, []);
 
-  const netProfit = (summary.total_revenue || 0) - totalExpenses - totalSalaries;
+  const netProfit = (summary.total_revenue || 0) - totalExpenses - totalSalaries - totalInventory;
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
@@ -106,12 +112,12 @@ const AdminDashboard = ({ setActiveTab }) => {
       </div>
 
       {/* Quick Actions Bar */}
-      <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
+      <div className="glass-card dashboard-quick-actions" style={{ padding: '1.25rem 1.5rem', marginBottom: '2.5rem', background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
         <div>
           <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>⚡ Quick POS & Operations</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Launch terminal or check reports without leaving the dashboard.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="quick-actions-btn-group" style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={() => setActiveTab('pos')} className="btn btn-primary">
             🖥️ Open POS Terminal
           </button>

@@ -22,6 +22,7 @@ const FinancialHub = () => {
   const [salaries, setSalaries] = useState([]);
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
+  const [inventory, setInventory] = useState([]);
 
   // Form states - Expense
   const [expCategory, setExpCategory] = useState('');
@@ -88,6 +89,9 @@ const FinancialHub = () => {
 
     const savedSal = localStorage.getItem('indus_salaries');
     if (savedSal) setSalaries(JSON.parse(savedSal));
+
+    const savedInv = localStorage.getItem('indus_inventory');
+    if (savedInv) setInventory(JSON.parse(savedInv));
 
     const savedCat = localStorage.getItem('indus_expense_categories');
     if (savedCat) {
@@ -199,7 +203,7 @@ const FinancialHub = () => {
   };
 
   // Calculations for summary totals
-  const totalExpensesSum = expenses.reduce((acc, e) => acc + e.amount, 0);
+  const totalExpensesSum = expenses.reduce((acc, e) => acc + e.amount, 0) + inventory.reduce((acc, item) => acc + item.purchasePrice, 0);
   const totalSalariesSum = salaries.reduce((acc, s) => acc + s.amount, 0);
   const totalOutflow = totalExpensesSum + totalSalariesSum;
   const grossSales = summary.total_revenue || 0;
@@ -227,6 +231,17 @@ const FinancialHub = () => {
           breakdown[m] = { month: m, sales: 0, operating: 0, payroll: 0 };
         }
         breakdown[m].operating += Number(e.amount);
+      }
+    });
+
+    // Load inventory purchases as operating expenses
+    inventory.forEach(item => {
+      if (item.purchaseDate) {
+        const m = item.purchaseDate.substring(0, 7); // "2026-07"
+        if (!breakdown[m]) {
+          breakdown[m] = { month: m, sales: 0, operating: 0, payroll: 0 };
+        }
+        breakdown[m].operating += Number(item.purchasePrice);
       }
     });
 

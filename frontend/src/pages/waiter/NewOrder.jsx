@@ -15,6 +15,7 @@ const NewOrder = ({ setActiveTab }) => {
   const [loading, setLoading] = useState(false);
   const [successModal, setSuccessModal] = useState(null);
   const [tables, setTables] = useState([]);
+  const [orderAreaFilter, setOrderAreaFilter] = useState('all');
 
   useEffect(() => {
     // Load active tables
@@ -24,8 +25,13 @@ const NewOrder = ({ setActiveTab }) => {
     } else {
       const defaults = [];
       for (let i = 1; i <= 10; i++) {
-        defaults.push({ id: i, name: `Table ${i}`, capacity: 4, status: 'available', isActive: true });
+        let area = 'Main Hall';
+        if (i <= 3) area = 'Family Hall';
+        else if (i <= 6) area = 'Rooftop';
+        else if (i <= 8) area = 'Mens Section';
+        defaults.push({ id: i, name: `Table ${i}`, capacity: 4, area: area, status: 'available', isActive: true });
       }
+      localStorage.setItem('indus_tables', JSON.stringify(defaults));
       setTables(defaults);
     }
 
@@ -155,18 +161,108 @@ const NewOrder = ({ setActiveTab }) => {
             <button onClick={() => setCart([])} className="btn btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}>Clear</button>
           </div>
 
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(99, 102, 241, 0.08)' }}>
-            <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>Select Dining Table</label>
+          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(99, 102, 241, 0.04)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '0.85rem', margin: 0 }}>🪑 Table Selection</label>
+              {tableNo && <span className="badge badge-success" style={{ fontSize: '0.75rem' }}>Selected: {tableNo}</span>}
+            </div>
+
+            {/* Area Filter Tabs */}
+            <div style={{ display: 'flex', gap: '0.25rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+              <button 
+                type="button"
+                onClick={() => setOrderAreaFilter('all')} 
+                className={`btn ${orderAreaFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem', minWidth: 'unset', whiteSpace: 'nowrap' }}
+              >
+                All
+              </button>
+              {['Family Hall', 'Rooftop', 'Mens Section', 'Main Hall'].map(area => (
+                <button 
+                  type="button"
+                  key={area}
+                  onClick={() => setOrderAreaFilter(area)} 
+                  className={`btn ${orderAreaFilter === area ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem', minWidth: 'unset', whiteSpace: 'nowrap' }}
+                >
+                  {area.replace(' Section', '').replace(' Hall', '')}
+                </button>
+              ))}
+            </div>
+
+            {/* Compact Tables Grid */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', 
+              gap: '0.4rem', 
+              maxHeight: '130px', 
+              overflowY: 'auto', 
+              padding: '0.25rem', 
+              background: 'rgba(0,0,0,0.2)', 
+              borderRadius: 'var(--radius-sm)' 
+            }}>
+              {tables
+                .filter(t => t.isActive && (orderAreaFilter === 'all' || t.area === orderAreaFilter))
+                .map(t => {
+                  const isSelected = tableNo === t.name;
+                  const isOccupied = t.status === 'occupied';
+                  const isReserved = t.status === 'reserved';
+                  
+                  let cardBorder = '1px solid var(--border-color)';
+                  let cardBg = 'rgba(255, 255, 255, 0.02)';
+                  let statusColor = 'var(--text-muted)';
+                  
+                  if (isSelected) {
+                    cardBorder = '1px solid var(--accent-primary)';
+                    cardBg = 'rgba(99, 102, 241, 0.15)';
+                  } else if (isOccupied) {
+                    cardBorder = '1px solid rgba(239, 68, 68, 0.4)';
+                    cardBg = 'rgba(239, 68, 68, 0.05)';
+                    statusColor = 'var(--danger)';
+                  } else if (isReserved) {
+                    cardBorder = '1px solid rgba(245, 158, 11, 0.4)';
+                    cardBg = 'rgba(245, 158, 11, 0.05)';
+                    statusColor = 'var(--warning)';
+                  } else {
+                    cardBorder = '1px solid rgba(16, 185, 129, 0.4)';
+                    cardBg = 'rgba(16, 185, 129, 0.05)';
+                    statusColor = 'var(--success)';
+                  }
+
+                  return (
+                    <div 
+                      key={t.id}
+                      onClick={() => setTableNo(t.name)}
+                      style={{
+                        padding: '0.4rem 0.25rem',
+                        textAlign: 'center',
+                        borderRadius: 'var(--radius-xs)',
+                        border: cardBorder,
+                        background: cardBg,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isSelected ? '0 0 8px rgba(99, 102, 241, 0.4)' : 'none'
+                      }}
+                      title={`${t.name} - ${t.area} (Capacity: ${t.capacity} guests) [${t.status}]`}
+                    >
+                      <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{t.name}</div>
+                      <div style={{ fontSize: '0.65rem', color: statusColor, marginTop: '2px' }}>👤 {t.capacity}</div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Fallback Selector */}
             <select 
               className="form-control" 
               value={tableNo} 
               onChange={(e) => setTableNo(e.target.value)} 
               required
-              style={{ width: '100%', fontSize: '1rem', fontWeight: '700', borderColor: tableNo ? 'var(--success)' : 'var(--accent-primary)', background: 'var(--bg-input)' }}
+              style={{ width: '100%', fontSize: '0.9rem', padding: '0.35rem 0.5rem', background: 'var(--bg-input)' }}
             >
-              <option value="">-- Select Table --</option>
+              <option value="">-- Or Select Dropdown --</option>
               {tables.filter(t => t.isActive).map(t => (
-                <option key={t.id} value={t.name}>{t.name} (👤 {t.capacity})</option>
+                <option key={t.id} value={t.name}>{t.name} - {t.area} (👤 {t.capacity})</option>
               ))}
             </select>
           </div>

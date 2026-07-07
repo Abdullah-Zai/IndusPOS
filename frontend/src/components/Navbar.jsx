@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-const Navbar = ({ title }) => {
+const Navbar = ({ title, setSidebarOpen }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -17,34 +17,50 @@ const Navbar = ({ title }) => {
 
   return (
     <header className="top-nav glass-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <h2 style={{ fontSize: '1.4rem' }}>{title || 'Dashboard'}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <button 
+          onClick={() => setSidebarOpen(prev => !prev)} 
+          className="nav-icon-btn mobile-menu-btn"
+          style={{ display: 'none', fontSize: '1.3rem', background: 'var(--bg-hover)' }}
+          title="Open Menu"
+        >
+          ☰
+        </button>
+        <h2 className="nav-title" style={{ fontSize: '1.4rem' }}>{title || 'Dashboard'}</h2>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Animated Lightbulb Mode Toggle */}
         <button 
           onClick={toggleTheme} 
-          className="btn btn-secondary" 
-          style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          title={`Switch to ${theme === 'dark' ? 'Light Mode' : 'Dark Mode'}`}
+          className={`nav-icon-btn ${theme === 'dark' ? 'lightbulb-off' : 'lightbulb-on'}`}
+          title={`Turn ${theme === 'dark' ? 'On Lights (Light Mode)' : 'Off Lights (Dark Mode)'}`}
         >
-          {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          💡
         </button>
 
+        {/* User profile avatar popover */}
         {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{user.username}</div>
-              <div style={{ marginTop: '-2px' }}>{getRoleBadge(user.role)}</div>
+          <div className="nav-profile-container" tabIndex={0}>
+            <div className="nav-profile-avatar-btn">
+              {user.username.charAt(0)}
+            </div>
+            <div className="profile-hover-card glass-card">
+              <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>👤 {user.username}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', textTransform: 'capitalize' }}>
+                Role: <b>{user.role}</b>
+              </div>
             </div>
           </div>
         )}
+
+        {/* Slide-out Logout Door Icon */}
         <button 
           onClick={logout} 
-          className="btn btn-secondary" 
-          style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
+          className="nav-icon-btn nav-logout-btn"
+          title="Sign Out / Logout"
         >
-          Logout ➔
+          🚪
         </button>
       </div>
     </header>

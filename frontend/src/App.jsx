@@ -11,7 +11,9 @@ import Billing from './pages/admin/Billing';
 import MenuManager from './pages/admin/MenuManager';
 import FinancialHub from './pages/admin/FinancialHub';
 import TablesManager from './pages/admin/TablesManager';
+import InventoryManager from './pages/admin/InventoryManager';
 import UsersManager from './pages/admin/UsersManager';
+import Settings from './pages/admin/Settings';
 
 // Waiter Pages
 import WaiterDashboard from './pages/waiter/WaiterDashboard';
@@ -26,10 +28,12 @@ import CashierDashboard from './pages/cashier/CashierDashboard';
 const App = () => {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
       setActiveTab('dashboard');
+      setSidebarOpen(false);
     }
   }, [user]);
 
@@ -56,8 +60,10 @@ const App = () => {
       case 'billing': return '🧾 Open Table Billing & Settlement';
       case 'menu': return '🍽️ Pakistani Cuisine Menu Manager';
       case 'tables': return '🪑 Restaurant Tables Configuration';
+      case 'inventory': return '📦 Store Room Inventory & Price Management';
       case 'financials': return '💰 Financial Hub & Operating Expenses';
       case 'users': return '👥 Staff Users & Role Permissions';
+      case 'settings': return '⚙️ System Configuration & POS Settings';
       case 'new_order': return '📝 Take New Table Order';
       default: return 'Indus Hotel POS';
     }
@@ -71,8 +77,10 @@ const App = () => {
         case 'billing': return <Billing />;
         case 'menu': return <MenuManager />;
         case 'tables': return <TablesManager />;
+        case 'inventory': return <InventoryManager />;
         case 'financials': return <FinancialHub />;
         case 'users': return <UsersManager />;
+        case 'settings': return <Settings />;
         default: return <AdminDashboard setActiveTab={setActiveTab} />;
       }
     } else if (user.role === 'waiter') {
@@ -96,9 +104,10 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)}></div>}
       <main className="main-content">
-        <Navbar title={getPageTitle()} />
+        <Navbar title={getPageTitle()} setSidebarOpen={setSidebarOpen} />
         {renderContent()}
       </main>
     </div>

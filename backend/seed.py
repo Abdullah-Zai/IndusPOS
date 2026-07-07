@@ -52,28 +52,28 @@ def seed_database():
         # 3. Seed Menu Items (Pakistani Desi Dishes)
         print("Seeding default Desi menu items...")
         menu_items_to_seed = [
-            {"category_name": "Karahi & Handi", "name": "Chicken Karahi", "variant": "Full", "price": 1800.00},
-            {"category_name": "Karahi & Handi", "name": "Chicken Karahi", "variant": "Half", "price": 1000.00},
-            {"category_name": "Karahi & Handi", "name": "Mutton Karahi", "variant": "Full", "price": 2800.00},
-            {"category_name": "Karahi & Handi", "name": "Mutton Karahi", "variant": "Half", "price": 1600.00},
-            {"category_name": "Karahi & Handi", "name": "Chicken Makhni Handi", "variant": "Regular", "price": 1500.00},
+            {"category_name": "Karahi & Handi", "name": "Chicken Karahi", "variant": "Full", "price": 1800.00, "image_url": "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=500&auto=format&fit=crop"},
+            {"category_name": "Karahi & Handi", "name": "Chicken Karahi", "variant": "Half", "price": 1000.00, "image_url": "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=500&auto=format&fit=crop"},
+            {"category_name": "Karahi & Handi", "name": "Mutton Karahi", "variant": "Full", "price": 2800.00, "image_url": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=500&auto=format&fit=crop"},
+            {"category_name": "Karahi & Handi", "name": "Mutton Karahi", "variant": "Half", "price": 1600.00, "image_url": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=500&auto=format&fit=crop"},
+            {"category_name": "Karahi & Handi", "name": "Chicken Makhni Handi", "variant": "Regular", "price": 1500.00, "image_url": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop"},
             
-            {"category_name": "BBQ", "name": "Chicken Boti", "variant": "Plate", "price": 600.00},
-            {"category_name": "BBQ", "name": "Chicken Malai Boti", "variant": "Plate", "price": 750.00},
-            {"category_name": "BBQ", "name": "Beef Seekh Kabab", "variant": "Plate", "price": 700.00},
+            {"category_name": "BBQ", "name": "Chicken Boti", "variant": "Plate", "price": 600.00, "image_url": "https://images.unsplash.com/photo-1598515214211-89d3e73ae83b?w=500&auto=format&fit=crop"},
+            {"category_name": "BBQ", "name": "Chicken Malai Boti", "variant": "Plate", "price": 750.00, "image_url": "https://images.unsplash.com/photo-1628294895950-9805252327bc?w=500&auto=format&fit=crop"},
+            {"category_name": "BBQ", "name": "Beef Seekh Kabab", "variant": "Plate", "price": 700.00, "image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop"},
             
-            {"category_name": "Rice Dishes", "name": "Chicken Biryani", "variant": "Single", "price": 300.00},
-            {"category_name": "Rice Dishes", "name": "Chicken Biryani", "variant": "Double", "price": 450.00},
-            {"category_name": "Rice Dishes", "name": "Mutton Palao", "variant": "Plate", "price": 650.00},
+            {"category_name": "Rice Dishes", "name": "Chicken Biryani", "variant": "Single", "price": 300.00, "image_url": "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=500&auto=format&fit=crop"},
+            {"category_name": "Rice Dishes", "name": "Chicken Biryani", "variant": "Double", "price": 450.00, "image_url": "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=500&auto=format&fit=crop"},
+            {"category_name": "Rice Dishes", "name": "Mutton Palao", "variant": "Plate", "price": 650.00, "image_url": "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&auto=format&fit=crop"},
             
-            {"category_name": "Tandoor", "name": "Roti", "variant": "Tandoori", "price": 30.00},
-            {"category_name": "Tandoor", "name": "Naan", "variant": "Plain", "price": 40.00},
-            {"category_name": "Tandoor", "name": "Garlic Naan", "variant": "Butter", "price": 80.00},
+            {"category_name": "Tandoor", "name": "Roti", "variant": "Tandoori", "price": 30.00, "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&auto=format&fit=crop"},
+            {"category_name": "Tandoor", "name": "Naan", "variant": "Plain", "price": 40.00, "image_url": "https://images.unsplash.com/photo-1626132647523-66f5bf380027?w=500&auto=format&fit=crop"},
+            {"category_name": "Tandoor", "name": "Garlic Naan", "variant": "Butter", "price": 80.00, "image_url": "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=500&auto=format&fit=crop"},
             
-            {"category_name": "Beverages", "name": "Mint Margarita", "variant": "Glass", "price": 250.00},
-            {"category_name": "Beverages", "name": "Soft Drink", "variant": "Can", "price": 120.00},
-            {"category_name": "Beverages", "name": "Lassi", "variant": "Sweet", "price": 180.00},
-            {"category_name": "Beverages", "name": "Lassi", "variant": "Salty", "price": 180.00},
+            {"category_name": "Beverages", "name": "Mint Margarita", "variant": "Glass", "price": 250.00, "image_url": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop"},
+            {"category_name": "Beverages", "name": "Soft Drink", "variant": "Can", "price": 120.00, "image_url": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500&auto=format&fit=crop"},
+            {"category_name": "Beverages", "name": "Lassi", "variant": "Sweet", "price": 180.00, "image_url": "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=500&auto=format&fit=crop"},
+            {"category_name": "Beverages", "name": "Lassi", "variant": "Salty", "price": 180.00, "image_url": "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=500&auto=format&fit=crop"},
         ]
 
         for item in menu_items_to_seed:
@@ -91,9 +91,12 @@ def seed_database():
                         variant=item["variant"],
                         price=item["price"],
                         is_available=True,
-                        image_url=f"https://placehold.co/300x200?text={item['name'].replace(' ', '+')}+{item['variant']}"
+                        image_url=item["image_url"]
                     )
                     db.add(new_item)
+                else:
+                    # Update image URL for existing items if they changed
+                    existing.image_url = item["image_url"]
         db.commit()
         print("Menu seeded successfully.")
 

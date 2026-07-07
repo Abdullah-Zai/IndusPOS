@@ -4,23 +4,50 @@ const TablesManager = () => {
   const [tables, setTables] = useState([]);
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState(4);
+  const [newArea, setNewArea] = useState('Family Hall');
+  
+  // Edit State
   const [editingTable, setEditingTable] = useState(null);
   const [editName, setEditName] = useState('');
   const [editCapacity, setEditCapacity] = useState(4);
+  const [editArea, setEditArea] = useState('Family Hall');
+
+  // Filter State
+  const [filterArea, setFilterArea] = useState('all');
+
+  const areas = ['Family Hall', 'Rooftop', 'Mens Section', 'Main Hall'];
 
   // Initialize tables list from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('indus_tables');
     if (saved) {
-      setTables(JSON.parse(saved));
+      // Ensure all loaded tables have an area property
+      const parsed = JSON.parse(saved).map((t, idx) => {
+        if (!t.area) {
+          let area = 'Main Hall';
+          if (idx < 3) area = 'Family Hall';
+          else if (idx < 6) area = 'Rooftop';
+          else if (idx < 8) area = 'Mens Section';
+          return { ...t, area };
+        }
+        return t;
+      });
+      setTables(parsed);
+      localStorage.setItem('indus_tables', JSON.stringify(parsed));
     } else {
       // Default Tables 1 to 10
       const defaults = [];
       for (let i = 1; i <= 10; i++) {
+        let area = 'Main Hall';
+        if (i <= 3) area = 'Family Hall';
+        else if (i <= 6) area = 'Rooftop';
+        else if (i <= 8) area = 'Mens Section';
+        
         defaults.push({
           id: i,
           name: `Table ${i}`,
           capacity: 4,
+          area: area,
           status: 'available', // available, occupied, reserved
           isActive: true
         });
@@ -48,6 +75,7 @@ const TablesManager = () => {
       id: Date.now(),
       name: newTableName.trim(),
       capacity: parseInt(newCapacity) || 4,
+      area: newArea,
       status: 'available',
       isActive: true
     };
@@ -78,6 +106,7 @@ const TablesManager = () => {
     setEditingTable(table);
     setEditName(table.name);
     setEditCapacity(table.capacity);
+    setEditArea(table.area || 'Family Hall');
   };
 
   const handleSaveEdit = (e) => {
@@ -90,7 +119,10 @@ const TablesManager = () => {
       return;
     }
 
-    const updated = tables.map(t => t.id === editingTable.id ? { ...t, name: editName.trim(), capacity: parseInt(editCapacity) || 4 } : t);
+    const updated = tables.map(t => t.id === editingTable.id 
+      ? { ...t, name: editName.trim(), capacity: parseInt(editCapacity) || 4, area: editArea } 
+      : t
+    );
     saveTables(updated);
     setEditingTable(null);
   };
@@ -100,6 +132,9 @@ const TablesManager = () => {
   const activeTables = tables.filter(t => t.isActive).length;
   const occupiedTables = tables.filter(t => t.isActive && t.status === 'occupied').length;
   const totalCapacity = tables.filter(t => t.isActive).reduce((acc, t) => acc + t.capacity, 0);
+
+  // Filtered list
+  const filteredTables = tables.filter(t => filterArea === 'all' || t.area === filterArea);
 
   return (
     <div className="page-body animate-fade-in" style={{ paddingBottom: '3rem' }}>
@@ -123,7 +158,7 @@ const TablesManager = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '1.5rem' }}>
+      <div className="tables-manager-grid">
         {/* Left: Add / Edit Form */}
         <div>
           <div className="glass-card" style={{ padding: '1.5rem', position: 'sticky', top: '2rem' }}>
@@ -143,6 +178,20 @@ const TablesManager = () => {
                     required
                   />
                 </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Area</label>
+                  <select
+                    className="form-select"
+                    value={editArea}
+                    onChange={(e) => setEditArea(e.target.value)}
+                  >
+                    {areas.map(area => (
+                      <option key={area} value={area}>{area}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Capacity (Guests)</label>
                   <input
@@ -150,11 +199,12 @@ const TablesManager = () => {
                     value={editCapacity}
                     onChange={(e) => setEditCapacity(e.target.value)}
                     min="1"
-                    max="30"
+                    max="50"
                     className="form-control"
                     required
                   />
                 </div>
+                
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                   <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
                   <button type="button" onClick={() => setEditingTable(null)} className="btn btn-secondary">Cancel</button>
@@ -173,6 +223,20 @@ const TablesManager = () => {
                     required
                   />
                 </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Area</label>
+                  <select
+                    className="form-select"
+                    value={newArea}
+                    onChange={(e) => setNewArea(e.target.value)}
+                  >
+                    {areas.map(area => (
+                      <option key={area} value={area}>{area}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', color: 'var(--text-secondary)' }}>Seating Capacity</label>
                   <input
@@ -180,7 +244,7 @@ const TablesManager = () => {
                     value={newCapacity}
                     onChange={(e) => setNewCapacity(e.target.value)}
                     min="1"
-                    max="30"
+                    max="50"
                     className="form-control"
                     required
                   />
@@ -193,100 +257,129 @@ const TablesManager = () => {
 
         {/* Right: Tables Grid */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1.2rem' }}>Dining Layout Control</h3>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Changes sync instantly to the waiter POS terminal</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.2rem' }}>Dining Layout Control</h3>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Changes sync instantly to the waiter POS terminal</span>
+            </div>
+            {/* Area Filter Tabs */}
+            <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(255,255,255,0.03)', padding: '0.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+              <button 
+                onClick={() => setFilterArea('all')} 
+                className={`btn ${filterArea === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', minWidth: 'unset' }}
+              >
+                All
+              </button>
+              {areas.map(area => (
+                <button 
+                  key={area}
+                  onClick={() => setFilterArea(area)} 
+                  className={`btn ${filterArea === area ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', minWidth: 'unset', whiteSpace: 'nowrap' }}
+                >
+                  {area.replace(' Section', '').replace(' Hall', '')}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid-cols-3">
-            {tables.map((table, index) => {
-              const staggerClass = `stagger-${(index % 5) + 1}`;
-              return (
-                <div 
-                  key={table.id}
-                  className={`glass-card animate-fade-in ${staggerClass}`}
-                  style={{ 
-                    padding: '1.25rem', 
-                    opacity: table.isActive ? 1 : 0.6,
-                    border: table.isActive ? '1px solid var(--border-color)' : '1px dashed var(--text-muted)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                    <div>
-                      <h4 style={{ fontSize: '1.1rem', margin: 0 }}>{table.name}</h4>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>👤 Up to {table.capacity} guests</span>
+            {filteredTables.length === 0 ? (
+              <div className="glass-card" style={{ gridColumn: 'span 3', padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No tables registered in this area.
+              </div>
+            ) : (
+              filteredTables.map((table, index) => {
+                const staggerClass = `stagger-${(index % 5) + 1}`;
+                return (
+                  <div 
+                    key={table.id}
+                    className={`glass-card animate-fade-in ${staggerClass}`}
+                    style={{ 
+                      padding: '1.25rem', 
+                      opacity: table.isActive ? 1 : 0.6,
+                      border: table.isActive ? '1px solid var(--border-color)' : '1px dashed var(--text-muted)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div>
+                        <h4 style={{ fontSize: '1.1rem', margin: 0 }}>{table.name}</h4>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>📍 {table.area}</span>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>👤 Up to {table.capacity} guests</div>
+                      </div>
+                      <span 
+                        className={`badge ${
+                          table.status === 'occupied' 
+                            ? 'badge-danger' 
+                            : table.status === 'reserved' 
+                            ? 'badge-warning' 
+                            : 'badge-success'
+                        }`}
+                        style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem' }}
+                      >
+                        {table.status === 'occupied' ? '🔴 Occupied' : table.status === 'reserved' ? '🟡 Reserved' : '🟢 Available'}
+                      </span>
                     </div>
-                    <span 
-                      className={`badge ${
-                        table.status === 'occupied' 
-                          ? 'badge-danger' 
-                          : table.status === 'reserved' 
-                          ? 'badge-warning' 
-                          : 'badge-success'
-                      }`}
-                      style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem' }}
-                    >
-                      {table.status === 'occupied' ? '🔴 Occupied' : table.status === 'reserved' ? '🟡 Reserved' : '🟢 Available'}
-                    </span>
-                  </div>
 
-                  {table.isActive && (
-                    <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
-                      <button 
-                        onClick={() => handleUpdateStatus(table.id, 'available')}
-                        className="btn btn-secondary"
-                        style={{ flex: 1, padding: '0.35rem', fontSize: '0.7rem', background: table.status === 'available' ? 'var(--success-bg)' : 'transparent', color: table.status === 'available' ? 'var(--success)' : 'inherit', borderColor: table.status === 'available' ? 'var(--success)' : 'var(--border-color)' }}
-                      >
-                        Free
-                      </button>
-                      <button 
-                        onClick={() => handleUpdateStatus(table.id, 'occupied')}
-                        className="btn btn-secondary"
-                        style={{ flex: 1, padding: '0.35rem', fontSize: '0.7rem', background: table.status === 'occupied' ? 'var(--danger-bg)' : 'transparent', color: table.status === 'occupied' ? 'var(--danger)' : 'inherit', borderColor: table.status === 'occupied' ? 'var(--danger)' : 'var(--border-color)' }}
-                      >
-                        Occupy
-                      </button>
-                      <button 
-                        onClick={() => handleUpdateStatus(table.id, 'reserved')}
-                        className="btn btn-secondary"
-                        style={{ flex: 1, padding: '0.35rem', fontSize: '0.7rem', background: table.status === 'reserved' ? 'var(--warning-bg)' : 'transparent', color: table.status === 'reserved' ? 'var(--warning)' : 'inherit', borderColor: table.status === 'reserved' ? 'var(--warning)' : 'var(--border-color)' }}
-                      >
-                        Reserve
-                      </button>
-                    </div>
-                  )}
+                    {table.isActive && (
+                      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
+                        <button 
+                          onClick={() => handleUpdateStatus(table.id, 'available')}
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '0.35rem', fontSize: '0.7rem', background: table.status === 'available' ? 'var(--success-bg)' : 'transparent', color: table.status === 'available' ? 'var(--success)' : 'inherit', borderColor: table.status === 'available' ? 'var(--success)' : 'var(--border-color)' }}
+                        >
+                          Free
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateStatus(table.id, 'occupied')}
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '0.35rem', fontSize: '0.7rem', background: table.status === 'occupied' ? 'var(--danger-bg)' : 'transparent', color: table.status === 'occupied' ? 'var(--danger)' : 'inherit', borderColor: table.status === 'occupied' ? 'var(--danger)' : 'var(--border-color)' }}
+                        >
+                          Occupy
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateStatus(table.id, 'reserved')}
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '0.35rem', fontSize: '0.7rem', background: table.status === 'reserved' ? 'var(--warning-bg)' : 'transparent', color: table.status === 'reserved' ? 'var(--warning)' : 'inherit', borderColor: table.status === 'reserved' ? 'var(--warning)' : 'var(--border-color)' }}
+                        >
+                          Reserve
+                        </button>
+                      </div>
+                    )}
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status:</span>
-                      <button 
-                        onClick={() => handleToggleActive(table.id)}
-                        className={`btn ${table.isActive ? 'btn-success' : 'btn-secondary'}`}
-                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', height: 'auto', background: table.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: table.isActive ? 'var(--success)' : 'var(--danger)', border: 'none' }}
-                      >
-                        {table.isActive ? 'Active' : 'Disabled'}
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button 
-                        onClick={() => startEdit(table)}
-                        className="btn btn-secondary" 
-                        style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset' }}
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteTable(table.id)}
-                        className="btn btn-secondary" 
-                        style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset', color: 'var(--danger)' }}
-                      >
-                        🗑️
-                      </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status:</span>
+                        <button 
+                          onClick={() => handleToggleActive(table.id)}
+                          className={`btn ${table.isActive ? 'btn-success' : 'btn-secondary'}`}
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', height: 'auto', background: table.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: table.isActive ? 'var(--success)' : 'var(--danger)', border: 'none' }}
+                        >
+                          {table.isActive ? 'Active' : 'Disabled'}
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button 
+                          onClick={() => startEdit(table)}
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset' }}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteTable(table.id)}
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem', minWidth: 'unset', color: 'var(--danger)' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

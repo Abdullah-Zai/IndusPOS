@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
   const { user } = useAuth();
 
   if (!user) return null;
@@ -12,8 +12,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'billing', label: 'Open Billing', icon: '🧾' },
     { id: 'menu', label: 'Menu Manager', icon: '🍽️' },
     { id: 'tables', label: 'Manage Tables', icon: '🪑' },
+    { id: 'inventory', label: 'Inventory Stash', icon: '📦' },
     { id: 'financials', label: 'Financial Hub', icon: '💰' },
     { id: 'users', label: 'Staff Users', icon: '👥' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
   const waiterLinks = [
@@ -38,24 +40,25 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   else if (user.role === 'cashier') links = cashierLinks;
 
   return (
-    <aside className="sidebar">
-      <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
-          borderRadius: '10px', 
-          background: 'var(--accent-gradient)', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          fontSize: '1.4rem',
-          boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)'
-        }}>
-          ⚡
-        </div>
+    <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <img 
+          src="/logo.png" 
+          alt="Indus Cuisine" 
+          style={{ 
+            width: '45px', 
+            height: '45px', 
+            borderRadius: '50%',
+            border: '2px solid var(--border-glow)',
+            boxShadow: '0 0 15px var(--accent-glow)',
+            objectFit: 'cover'
+          }} 
+        />
         <div>
-          <h1 style={{ fontSize: '1.25rem', lineHeight: '1.1' }}>INDUS <span className="gradient-text">POS</span></h1>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>FastAPI & React</span>
+          <h1 style={{ fontSize: '1.1rem', lineHeight: '1.2', fontWeight: '800' }}>
+            INDUS <span className="gradient-text">CUISINE</span>
+          </h1>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fine Dining POS</span>
         </div>
       </div>
 
@@ -68,7 +71,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           return (
             <button
               key={link.id}
-              onClick={() => setActiveTab(link.id)}
+              onClick={() => {
+                setActiveTab(link.id);
+                if (setSidebarOpen) setSidebarOpen(false);
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',

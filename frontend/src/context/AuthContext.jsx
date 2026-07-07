@@ -66,9 +66,11 @@ export const AuthProvider = ({ children }) => {
   const authFetch = async (url, options = {}) => {
     const headers = {
       ...options.headers,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      'Authorization': `Bearer ${token}`
     };
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
     const res = await fetch(url, { ...options, headers });
     if (res.status === 401) {
       logout();

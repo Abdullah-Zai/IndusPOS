@@ -48,30 +48,31 @@ const Login = () => {
     }}>
       <button 
         onClick={toggleTheme} 
-        className="btn btn-secondary glass-card" 
-        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', padding: '0.6rem 1rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', zIndex: 10 }}
-        title={`Switch to ${theme === 'dark' ? 'Light Mode' : 'Dark Mode'}`}
+        className={`nav-icon-btn ${theme === 'dark' ? 'lightbulb-off' : 'lightbulb-on'}`}
+        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}
+        title={`Turn ${theme === 'dark' ? 'On Lights (Light Mode)' : 'Off Lights (Dark Mode)'}`}
       >
-        {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+        💡
       </button>
       <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '460px', overflow: 'hidden' }}>
         <div style={{ padding: '2.5rem 2rem 1.5rem', textAlign: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-table-header)' }}>
-          <div style={{ 
-            width: '56px', 
-            height: '56px', 
-            borderRadius: '16px', 
-            background: 'var(--accent-gradient)', 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            fontSize: '1.8rem',
-            marginBottom: '1rem',
-            boxShadow: '0 0 25px rgba(99, 102, 241, 0.5)'
-          }}>
-            ⚡
-          </div>
-          <h1 style={{ fontSize: '1.8rem', marginBottom: '0.4rem' }}>INDUS <span className="gradient-text">HOTEL</span></h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Next-Gen POS & Restaurant Management</p>
+          <img 
+            src="/logo.png" 
+            alt="Indus Cuisine" 
+            style={{ 
+              width: '65px', 
+              height: '65px', 
+              borderRadius: '50%',
+              border: '2px solid var(--border-glow)',
+              boxShadow: '0 0 20px var(--accent-glow)',
+              objectFit: 'cover',
+              marginBottom: '1.25rem'
+            }} 
+          />
+          <h1 style={{ fontSize: '1.8rem', marginBottom: '0.4rem', fontWeight: '800' }}>
+            INDUS <span className="gradient-text">CUISINE</span>
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Fine Dining POS & Restaurant Management</p>
         </div>
 
         <div style={{ padding: '2rem' }}>

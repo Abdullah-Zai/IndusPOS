@@ -4,7 +4,7 @@ import OrderCard from '../../components/OrderCard';
 import Modal from '../../components/Modal';
 
 const Billing = () => {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -30,10 +30,21 @@ const Billing = () => {
     loadOpenOrders();
   }, []);
 
+  const getSavedTaxRate = () => {
+    const saved = localStorage.getItem('indus_settings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.taxRate !== undefined) return parsed.taxRate;
+      } catch (err) {}
+    }
+    return 13;
+  };
+
   const [editingItems, setEditingItems] = useState([]);
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState('percent'); // percent, flat
-  const [taxRate, setTaxRate] = useState(13); // Default GST
+  const [taxRate, setTaxRate] = useState(getSavedTaxRate);
 
   const handleBillOrder = (order) => {
     setSelectedOrder(order);
@@ -41,7 +52,7 @@ const Billing = () => {
     setEditingItems(order.items ? order.items.map(it => ({ ...it })) : []);
     setDiscount(0);
     setDiscountType('percent');
-    setTaxRate(13);
+    setTaxRate(getSavedTaxRate());
   };
 
   const getSubtotal = () => {
@@ -195,56 +206,62 @@ const Billing = () => {
 
             {/* Editable Order Items List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.75rem', marginBottom: '1rem', background: 'rgba(255, 255, 255, 0.02)' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem', marginBottom: '0.25rem' }}>🖊️ Edit Item Quantities</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem', marginBottom: '0.25rem' }}>
+                {user?.role === 'cashier' ? '📋 Invoice Items' : '🖊️ Edit Item Quantities'}
+              </div>
               {editingItems.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No items in order</div>
               ) : (
                 editingItems.map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.15rem 0' }}>
                     <div style={{ flex: 1, paddingRight: '0.5rem' }}>{item.item_name} {item.variant ? `(${item.variant})` : ''}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          const updated = editingItems.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it);
-                          setEditingItems(updated);
-                        }} 
-                        className="btn btn-secondary" 
-                        style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem', minWidth: 'unset', height: '24px' }}
-                      >
-                        -
-                      </button>
-                      <span style={{ fontWeight: 'bold', minWidth: '15px', textAlign: 'center' }}>{item.quantity}</span>
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          const updated = editingItems.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it);
-                          setEditingItems(updated);
-                        }} 
-                        className="btn btn-secondary" 
-                        style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem', minWidth: 'unset', height: '24px' }}
-                      >
-                        +
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          const updated = editingItems.filter((_, i) => i !== idx);
-                          setEditingItems(updated);
-                        }} 
-                        className="btn btn-secondary" 
-                        style={{ padding: '0.15rem 0.4rem', fontSize: '0.75rem', minWidth: 'unset', color: 'var(--danger)', height: '24px' }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    {user?.role === 'cashier' ? (
+                      <span style={{ fontWeight: 'bold', color: 'var(--text-secondary)' }}>Qty: {item.quantity}</span>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const updated = editingItems.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it);
+                            setEditingItems(updated);
+                          }} 
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem', minWidth: 'unset', height: '24px' }}
+                        >
+                          -
+                        </button>
+                        <span style={{ fontWeight: 'bold', minWidth: '15px', textAlign: 'center' }}>{item.quantity}</span>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const updated = editingItems.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it);
+                            setEditingItems(updated);
+                          }} 
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem', minWidth: 'unset', height: '24px' }}
+                        >
+                          +
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const updated = editingItems.filter((_, i) => i !== idx);
+                            setEditingItems(updated);
+                          }} 
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.15rem 0.4rem', fontSize: '0.75rem', minWidth: 'unset', color: 'var(--danger)', height: '24px' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
             </div>
 
             {/* Discounts & Tax Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: 'var(--bg-table-row)', borderRadius: 'var(--radius-md)', padding: '0.75rem', marginBottom: '1rem' }}>
+            <div className="billing-controls-grid" style={{ background: 'var(--bg-table-row)', borderRadius: 'var(--radius-md)', padding: '0.75rem', marginBottom: '1rem' }}>
               <div>
                 <label className="form-label" style={{ fontSize: '0.8rem', marginBottom: '0.25rem' }}>Discount</label>
                 <div style={{ display: 'flex', gap: '0.25rem' }}>

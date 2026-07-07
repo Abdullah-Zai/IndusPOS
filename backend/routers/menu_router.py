@@ -114,3 +114,28 @@ def delete_item(
     db.delete(item)
     db.commit()
     return None
+
+import os
+import shutil
+import datetime
+from fastapi import UploadFile, File
+
+UPLOAD_DIR = "static/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.post("/upload-image")
+def upload_image(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(auth.require_roles(["admin"]))
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Invalid image file type")
+    
+    timestamp = int(datetime.datetime.now().timestamp())
+    filename = f"{timestamp}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    return {"image_url": f"/static/uploads/{filename}"}

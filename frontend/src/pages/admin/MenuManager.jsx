@@ -24,6 +24,7 @@ const MenuManager = () => {
     is_available: true
   });
   const [catName, setCatName] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const loadMenu = async () => {
     try {
@@ -93,6 +94,32 @@ const MenuManager = () => {
       loadMenu();
     } catch (err) {
       alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const body = new FormData();
+    body.append('file', file);
+
+    try {
+      const res = await authFetch('/api/menu/upload-image', {
+        method: 'POST',
+        body
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || 'Failed to upload image');
+      }
+      const data = await res.json();
+      setFormData(prev => ({ ...prev, image_url: data.image_url }));
+    } catch (err) {
+      alert(`Upload error: ${err.message}`);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -266,8 +293,24 @@ const MenuManager = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Image URL (Optional)</label>
-            <input type="url" className="form-input" placeholder="https://..." value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} />
+            <label className="form-label">Dish Image</label>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+                className="form-input" 
+                style={{ padding: '0.35rem 0.5rem' }} 
+              />
+              {uploading && <span style={{ fontSize: '0.85rem', color: '#10b981' }}>Uploading...</span>}
+            </div>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Or paste an image URL directly: https://..." 
+              value={formData.image_url} 
+              onChange={(e) => setFormData({...formData, image_url: e.target.value})} 
+            />
           </div>
         </form>
       </Modal>

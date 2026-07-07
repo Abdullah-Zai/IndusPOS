@@ -9,7 +9,8 @@ This document records the completed and upcoming features for the modern Indus P
 ### 1. General & Architecture Modernization
 - **Backend Clean-up**: Removed obsolete legacy PHP files and databases (`admin`, `app`, `assets`, `css`, `kitchen`, `waiter`, `index.php`, `logout.php`, `setup_database.php`).
 - **Modern React & Fastify Core**: Deployed Docker-Compose mapping ports `3000` (React frontend) and `80` (Fastify API backend) directly.
-- **Cool Aesthetics & Dark Mode**: Integrated radial background gradient flows, button reflection swipe overlays on hover, cubic-bezier modal entries, and staggered card list animation fades.
+- **Unified Branding & Global Green-Amber Theme**: Designed and integrated a professional golden **Indus Cuisine** logo across the Login and Dashboard layouts. Fully migrated the application accent system to a glowing **Emerald Green & Amber Gold** contrast gradient in both Dark and Light Modes (completely removing blue/purple schemes).
+- **Top Nav Upgrades**: Deployed interactive modes including an animated lightbulb theme toggler, a hover-reveal user details popover avatar, and exit-action logout symbols.
 
 ### 2. Dining Layout Console (Tables Management)
 - Created **TablesManager.jsx** allowing the Owner (Admin) to view, add, configure capacity, and toggle the active status of restaurant dining tables.
