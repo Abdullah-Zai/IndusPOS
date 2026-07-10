@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     const res = await fetch(url, { ...options, headers });
     if (res.status === 401) {
       logout();
-      throw new Error('Unauthorized');
+      throw new Error('Session expired. Please log in again.');
     }
     return res;
   };

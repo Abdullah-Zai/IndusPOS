@@ -9,10 +9,13 @@ services:
       - ./backend:/app
     environment:
       - DB_HOST=db
-      - DB_USER=root
-      - DB_PASS=root
+      - DB_USER=postgres
+      - DB_PASS=postgres
       - DB_NAME=restaurant_pos
-      - DB_PORT=3306
+      - DB_PORT=5432
+      - SECRET_KEY=IndusHotelPOS_JWT_S3cr3tKey_2026!@#Change_In_Prod
+      - FRONTEND_URL=http://localhost:3000
+      - PYTHONUNBUFFERED=1
     depends_on:
       - db
 
@@ -30,14 +33,14 @@ services:
       - api
 
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: restaurant_pos
-    ports:
-      - "3306:3306"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: restaurant_pos
+    # Port 5432 is NOT exposed to the host — only the Docker network can reach it
     volumes:
-      - db_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  db_data:
+  postgres_data:

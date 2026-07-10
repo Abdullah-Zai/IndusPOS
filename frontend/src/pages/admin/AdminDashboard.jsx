@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import OrderCard from '../../components/OrderCard';
+import { 
+  FinancialIcon, 
+  TrendingUpIcon, 
+  CartIcon, 
+  ChefIcon,
+  PosIcon,
+  BillingIcon
+} from '../../components/Icons';
 
 const AdminDashboard = ({ setActiveTab }) => {
   const { authFetch } = useAuth();
@@ -71,8 +79,8 @@ const AdminDashboard = ({ setActiveTab }) => {
       {/* Stats Cards */}
       <div className="grid-cols-4" style={{ marginBottom: '2.5rem' }}>
         <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
-            💰
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(16, 185, 129, 0.35)' }}>
+            <FinancialIcon width="24" height="24" />
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Gross Sales</span>
@@ -81,18 +89,18 @@ const AdminDashboard = ({ setActiveTab }) => {
         </div>
 
         <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: netProfit >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: netProfit >= 0 ? '#10b981' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: netProfit >= 0 ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)' }}>
-            📈
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: netProfit >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: netProfit >= 0 ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)' }}>
+            <TrendingUpIcon width="24" height="24" />
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Net Profit</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: netProfit >= 0 ? '#10b981' : 'var(--danger)' }}>Rs. {netProfit.toLocaleString()}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>Rs. {netProfit.toLocaleString()}</div>
           </div>
         </div>
 
         <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
-            🛒
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--info)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+            <CartIcon width="24" height="24" />
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Paid Bills</span>
@@ -101,8 +109,8 @@ const AdminDashboard = ({ setActiveTab }) => {
         </div>
 
         <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-            🍳
+          <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(245, 158, 11, 0.35)' }}>
+            <ChefIcon width="24" height="24" />
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Kitchen Queue</span>
@@ -112,17 +120,19 @@ const AdminDashboard = ({ setActiveTab }) => {
       </div>
 
       {/* Quick Actions Bar */}
-      <div className="glass-card dashboard-quick-actions" style={{ padding: '1.25rem 1.5rem', marginBottom: '2.5rem', background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
+      <div className="glass-card dashboard-quick-actions" style={{ padding: '1.25rem 1.5rem', marginBottom: '2.5rem', background: 'rgba(16, 185, 129, 0.06)', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
         <div>
-          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>⚡ Quick POS & Operations</h3>
+          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ animation: 'pulseScale 2s infinite' }}>⚡</span> Quick POS & Operations
+          </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Launch terminal or check reports without leaving the dashboard.</p>
         </div>
         <div className="quick-actions-btn-group" style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => setActiveTab('pos')} className="btn btn-primary">
-            🖥️ Open POS Terminal
+          <button onClick={() => setActiveTab('pos')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <PosIcon width="18" height="18" /> Open POS Terminal
           </button>
-          <button onClick={() => setActiveTab('billing')} className="btn btn-secondary">
-            🧾 Open Table Billing
+          <button onClick={() => setActiveTab('billing')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BillingIcon width="18" height="18" /> Open Table Billing
           </button>
         </div>
       </div>

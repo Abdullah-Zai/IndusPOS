@@ -80,17 +80,51 @@ def get_recent_bills(
         for b in bills
     ]
 
+@router.get("/daily")
+def get_daily_sales(
+    month: Optional[str] = Query(None, description="YYYY-MM"),
+    start_date: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    end_date: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_roles(["admin", "cashier"]))
+):
+    """Returns daily sales count and revenue, grouping by business date. Only counts days with sales."""
+    query = db.query(
+        models.Order.business_date,
+        func.count(models.Bill.id).label("bill_count"),
+        func.sum(models.Bill.total_amount).label("daily_revenue")
+    ).join(models.Bill, models.Order.id == models.Bill.order_id)
+
+    if month:
+        query = query.filter(models.Order.business_date.like(f"{month}-%"))
+    if start_date:
+        query = query.filter(models.Order.business_date >= start_date)
+    if end_date:
+        query = query.filter(models.Order.business_date <= end_date)
+
+    results = query.group_by(models.Order.business_date).order_by(models.Order.business_date.desc()).all()
+
+    return [
+        {
+            "date": row.business_date,
+            "sales_count": int(row.bill_count or 0),
+            "revenue": round(float(row.daily_revenue or 0), 2)
+        }
+        for row in results
+    ]
+
 @router.get("/monthly")
 def get_monthly_sales(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_roles(["admin"]))
 ):
-    bills = db.query(models.Bill).all()
+    bills = db.query(models.Bill).join(models.Order).all()
     monthly_data = {}
     for b in bills:
-        month_str = b.created_at.strftime("%Y-%m")
+        # Use business_date (YYYY-MM prefix) — consistent with the 6AM shift rule
+        month_str = b.order.business_date[:7]
         monthly_data[month_str] = monthly_data.get(month_str, 0.0) + float(b.total_amount)
-    
+
     return [
         {"month": m, "revenue": round(rev, 2)}
         for m, rev in sorted(monthly_data.items(), reverse=True)

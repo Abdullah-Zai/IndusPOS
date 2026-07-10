@@ -2,10 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies if required by pymysql or general utils
+# Install system dependencies if required by psycopg2 or general utils
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    default-libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

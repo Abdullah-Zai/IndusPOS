@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-const TablesManager = () => {
+const TablesManager = ({ readOnly = false }) => {
   const { user } = useAuth();
+  const canEdit = !readOnly && user?.role !== 'cashier';
   const [tables, setTables] = useState([]);
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState(4);
@@ -196,9 +197,14 @@ const TablesManager = () => {
         </div>
       </div>
 
-      <div className="tables-manager-grid" style={{ gridTemplateColumns: user?.role === 'cashier' ? '1fr' : undefined }}>
+      <div className="tables-manager-grid" style={{ gridTemplateColumns: !canEdit ? '1fr' : undefined }}>
         {/* Left: Add / Edit Form */}
-        {user?.role !== 'cashier' && (
+        {!canEdit && (
+          <div style={{ background: 'var(--warning-bg)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 'var(--radius-md)', padding: '0.65rem 1rem', marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', gridColumn: '1 / -1' }}>
+            👁️ <strong>View Only</strong> — Cashiers can view table status but cannot add, edit, or delete tables.
+          </div>
+        )}
+        {canEdit && (
           <div>
             <div className="glass-card" style={{ padding: '1.5rem', position: 'sticky', top: '2rem' }}>
               <h3 style={{ fontSize: '1.2rem', marginBottom: '1.25rem' }}>

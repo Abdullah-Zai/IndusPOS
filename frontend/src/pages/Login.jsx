@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { 
+  UserIcon, 
+  TablesIcon, 
+  ChefIcon, 
+  FinancialIcon, 
+  LightbulbIcon 
+} from '../components/Icons';
 
 const Login = () => {
   const { login } = useAuth();
@@ -46,19 +53,43 @@ const Login = () => {
       padding: '2rem',
       position: 'relative'
     }}>
+      {/* Decorative background orbs */}
+      <div style={{
+        position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0
+      }}>
+        <div style={{
+          position: 'absolute', top: '-15%', left: '-10%',
+          width: '500px', height: '500px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 70%)',
+          filter: 'blur(40px)'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-10%', right: '-5%',
+          width: '600px', height: '600px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.14) 0%, transparent 70%)',
+          filter: 'blur(50px)'
+        }} />
+        <div style={{
+          position: 'absolute', top: '40%', right: '15%',
+          width: '300px', height: '300px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 70%)',
+          filter: 'blur(35px)'
+        }} />
+      </div>
+
       <button 
         onClick={toggleTheme} 
         className={`nav-icon-btn ${theme === 'dark' ? 'lightbulb-off' : 'lightbulb-on'}`}
         style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}
         title={`Turn ${theme === 'dark' ? 'On Lights (Light Mode)' : 'Off Lights (Dark Mode)'}`}
       >
-        💡
+        <LightbulbIcon width="20" height="20" />
       </button>
-      <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '460px', overflow: 'hidden' }}>
+      <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '460px', overflow: 'hidden', zIndex: 1 }}>
         <div style={{ padding: '2.5rem 2rem 1.5rem', textAlign: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-table-header)' }}>
           <img 
             src="/logo.png" 
-            alt="Indus Cuisine" 
+            alt="Indus Legacy" 
             style={{ 
               width: '65px', 
               height: '65px', 
@@ -70,9 +101,9 @@ const Login = () => {
             }} 
           />
           <h1 style={{ fontSize: '1.8rem', marginBottom: '0.4rem', fontWeight: '800' }}>
-            INDUS <span className="gradient-text">CUISINE</span>
+            INDUS <span className="gradient-text">LEGACY</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Fine Dining POS & Restaurant Management</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Fine Dining &amp; Restaurant Management</p>
         </div>
 
         <div style={{ padding: '2rem' }}>
@@ -110,10 +141,14 @@ const Login = () => {
             <button 
               type="submit" 
               className="btn btn-primary" 
-              style={{ width: '100%', padding: '0.85rem', fontSize: '1rem' }}
+              style={{ width: '100%', padding: '0.85rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               disabled={loading}
             >
-              {loading ? 'Authenticating...' : 'Sign In to POS ➔'}
+              {loading ? 'Authenticating...' : (
+                <>
+                  Sign In to POS <span style={{ transition: 'transform 0.2s', display: 'inline-block' }}>➔</span>
+                </>
+              )}
             </button>
           </form>
 
@@ -121,38 +156,42 @@ const Login = () => {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
               Instant Demo Access
             </span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem', marginTop: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginTop: '0.75rem' }}>
               <button 
                 type="button" 
                 onClick={() => handleDemoLogin('admin', 'admin123')}
                 className="btn btn-secondary" 
-                style={{ padding: '0.5rem 0.2rem', fontSize: '0.75rem', flexDirection: 'column', gap: '0.2rem', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+                style={{ padding: '0.6rem 0.2rem', fontSize: '0.78rem', flexDirection: 'column', gap: '0.35rem', borderColor: 'rgba(239, 68, 68, 0.35)', display: 'flex', alignItems: 'center' }}
               >
-                <span>👑 Admin</span>
+                <UserIcon width="16" height="16" style={{ color: 'var(--danger)' }} />
+                <span>Admin</span>
               </button>
               <button 
                 type="button" 
                 onClick={() => handleDemoLogin('waiter', 'waiter123')}
                 className="btn btn-secondary" 
-                style={{ padding: '0.5rem 0.2rem', fontSize: '0.75rem', flexDirection: 'column', gap: '0.2rem', borderColor: 'rgba(59, 130, 246, 0.4)' }}
+                style={{ padding: '0.6rem 0.2rem', fontSize: '0.78rem', flexDirection: 'column', gap: '0.35rem', borderColor: 'rgba(59, 130, 246, 0.35)', display: 'flex', alignItems: 'center' }}
               >
-                <span>🪑 Waiter</span>
+                <TablesIcon width="16" height="16" style={{ color: 'var(--info)' }} />
+                <span>Waiter</span>
               </button>
               <button 
                 type="button" 
                 onClick={() => handleDemoLogin('kitchen', 'kitchen123')}
                 className="btn btn-secondary" 
-                style={{ padding: '0.5rem 0.2rem', fontSize: '0.75rem', flexDirection: 'column', gap: '0.2rem', borderColor: 'rgba(245, 158, 11, 0.4)' }}
+                style={{ padding: '0.6rem 0.2rem', fontSize: '0.78rem', flexDirection: 'column', gap: '0.35rem', borderColor: 'rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center' }}
               >
-                <span>🍳 Kitchen</span>
+                <ChefIcon width="16" height="16" style={{ color: 'var(--warning)' }} />
+                <span>Kitchen</span>
               </button>
               <button 
                 type="button" 
                 onClick={() => handleDemoLogin('cashier', 'cashier123')}
                 className="btn btn-secondary" 
-                style={{ padding: '0.5rem 0.2rem', fontSize: '0.75rem', flexDirection: 'column', gap: '0.2rem', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+                style={{ padding: '0.6rem 0.2rem', fontSize: '0.78rem', flexDirection: 'column', gap: '0.35rem', borderColor: 'rgba(16, 185, 129, 0.35)', display: 'flex', alignItems: 'center' }}
               >
-                <span>💵 Cashier</span>
+                <FinancialIcon width="16" height="16" style={{ color: 'var(--success)' }} />
+                <span>Cashier</span>
               </button>
             </div>
           </div>

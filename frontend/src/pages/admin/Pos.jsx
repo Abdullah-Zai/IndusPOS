@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
+import { printThermalReceipt } from '../../components/PrintReceipt';
 
 const Pos = () => {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [selectedCat, setSelectedCat] = useState('all');
@@ -33,7 +34,18 @@ const Pos = () => {
     } else {
       const defaults = [];
       for (let i = 1; i <= 10; i++) {
-        defaults.push({ id: i, name: `Table ${i}`, capacity: 4, status: 'available', isActive: true });
+        let area = 'Main Hall';
+        let name = '';
+        if (i <= 3) {
+          area = 'Family Hall'; name = `FH ${i}`;
+        } else if (i <= 6) {
+          area = 'Rooftop'; name = `RF ${i - 3}`;
+        } else if (i <= 8) {
+          area = 'Mens Section'; name = `MS ${i - 6}`;
+        } else {
+          area = 'Main Hall'; name = `G ${i - 8}`;
+        }
+        defaults.push({ id: i, name, capacity: 4, area, status: 'available', isActive: true });
       }
       setTables(defaults);
     }
@@ -71,17 +83,48 @@ const Pos = () => {
     return matchesCat && matchesSearch;
   });
 
-  const addToCart = (item) => {
+  // Size & Qty Modal State
+  const [qtyModalItem, setQtyModalItem] = useState(null);
+  const [selectedVariantId, setSelectedVariantId] = useState('');
+  const [itemQty, setItemQty] = useState(1);
+  const [qtyError, setQtyError] = useState('');
+
+  const openQtyModal = (item) => {
+    setQtyModalItem(item);
+    setSelectedVariantId(item.id);
+    setItemQty(1);
+    setQtyError('');
+  };
+
+  const handleAddWithQty = () => {
+    setQtyError('');
+    const qty = parseInt(itemQty);
+    if (isNaN(qty) || qty <= 0) {
+      setQtyError('⚠️ Quantity must be at least 1.');
+      return;
+    }
+    if (qty > 100) {
+      setQtyError('⚠️ Quantity cannot exceed 100.');
+      return;
+    }
+    const selectedItem = items.find(i => i.id === Number(selectedVariantId));
+    if (!selectedItem) {
+      setQtyError('⚠️ Please select a size/portion.');
+      return;
+    }
+
     setCart(prev => {
-      const existingIdx = prev.findIndex(ci => ci.id === item.id);
+      const existingIdx = prev.findIndex(ci => ci.id === selectedItem.id);
       if (existingIdx > -1) {
         const updated = [...prev];
-        updated[existingIdx].qty += 1;
+        updated[existingIdx].qty += qty;
         return updated;
       } else {
-        return [...prev, { ...item, qty: 1 }];
+        return [...prev, { ...selectedItem, qty: qty }];
       }
     });
+
+    setQtyModalItem(null);
   };
 
   const updateQty = (id, delta) => {
@@ -144,27 +187,19 @@ const Pos = () => {
   };
 
   const handlePrintReceipt = () => {
-    const printContent = document.getElementById('pos-receipt-print-area').innerHTML;
-    const printWindow = window.open('', '', 'width=600,height=800');
-    printWindow.document.write('<html><head><title>Print Receipt</title>');
-    printWindow.document.write('<style>');
-    printWindow.document.write(`
-      body { font-family: monospace; padding: 20px; color: #000; background: #fff; }
-      .receipt-title { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
-      .receipt-subtitle { font-size: 0.85rem; text-align: center; color: #555; margin-bottom: 20px; }
-      .receipt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.85rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
-      .receipt-items { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
-      .receipt-item { display: flex; justify-content: space-between; }
-      .receipt-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px; }
-      .receipt-footer { text-align: center; font-size: 0.8rem; margin-top: 30px; color: #555; }
-    `);
-    printWindow.document.write('</style></head><body>');
-    printWindow.document.write(printContent);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    printThermalReceipt({
+      orderNumber: receiptModal.order_number,
+      orderType: receiptModal.order_type,
+      tableNo: receiptModal.table_no,
+      paymentMethod: paymentMethod,
+      items: receiptModal.items,
+      subtotal: receiptModal.total_amount,
+      discount: 0,
+      tax: 0,
+      totalAmount: receiptModal.total_amount,
+      cashierName: user?.username || '',
+      createdAt: receiptModal.created_at || new Date().toISOString(),
+    });
     setReceiptModal(null);
   };
 
@@ -217,7 +252,7 @@ const Pos = () => {
               <div 
                 key={item.id} 
                 className="glass-card item-card animate-scale-up" 
-                onClick={() => addToCart(item)}
+                onClick={() => openQtyModal(item)}
                 style={{ 
                   cursor: 'pointer', 
                   display: 'flex', 
@@ -241,12 +276,20 @@ const Pos = () => {
                     </span>
                   )}
                 </div>
-                <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div style={{ 
+                  padding: '1rem', 
+                  flex: 1, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between',
+                  background: 'var(--bg-secondary)',
+                  borderTop: '1px solid var(--border-color)'
+                }}>
                   <div>
-                    <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.2 }}>{item.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{item.category_name}</div>
+                    <div style={{ fontWeight: '700', fontSize: '1.02rem', color: 'var(--text-primary)', lineHeight: 1.2 }}>{item.name}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>{item.category_name}</div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.8rem', paddingTop: '0.6rem', borderTop: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.8rem', paddingTop: '0.6rem', borderTop: '1px dashed var(--border-color)' }}>
                     <span style={{ fontWeight: '800', color: 'var(--accent-primary)', fontSize: '1.05rem' }}>
                       Rs. {Number(item.price).toLocaleString()}
                     </span>
@@ -259,7 +302,12 @@ const Pos = () => {
         </div>
 
         {/* Right: Live Cart & Billing */}
-        <div className="pos-cart">
+        <div className="pos-cart" style={{
+          background: 'var(--bg-secondary)',
+          border: '2.5px solid var(--accent-primary)',
+          boxShadow: '0 8px 30px rgba(16, 185, 129, 0.25)',
+          borderRadius: 'var(--radius-lg)'
+        }}>
           <div className="glass-header" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '1.1rem' }}>🛒 Current Order Cart</h3>
             <button onClick={clearCart} className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}>
@@ -390,7 +438,7 @@ const Pos = () => {
         title="🎉 Order Billed Successfully!"
         footer={
           <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
-            <button onClick={handlePrintReceipt} className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
+            <button onClick={handlePrintReceipt} className="btn btn-primary" style={{ flex: 1, background: 'var(--accent-gradient)' }}>
               🖨️ Print Bill
             </button>
             <button onClick={() => setReceiptModal(null)} className="btn btn-secondary" style={{ flex: 1 }}>
@@ -400,36 +448,81 @@ const Pos = () => {
         }
       >
         {receiptModal && (
-          <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🧾</div>
-            
-            <div id="pos-receipt-print-area">
-              <div className="receipt-title">INDUS HOTEL</div>
-              <div className="receipt-subtitle">Official POS Receipt • Order #{receiptModal.order_number}</div>
-              
-              <div className="receipt-grid">
-                <div>Type: <b>{receiptModal.order_type.toUpperCase()}</b></div>
-                <div>Date: <b>{receiptModal.business_date}</b></div>
-                {receiptModal.table_no && <div style={{ gridColumn: 'span 2' }}>Table/Rider: <b>{receiptModal.table_no}</b></div>}
+          <div style={{ fontFamily: 'Courier New, monospace', fontSize: '0.85rem', color: '#000', background: '#fff', padding: '1rem', maxWidth: '320px', margin: '0 auto', border: '1px solid #ddd', borderRadius: '8px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '50%', border: '2px solid #000', fontSize: '18px', fontWeight: '900', marginBottom: '4px' }}>IL</div>
+              <div style={{ fontSize: '16px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase' }}>Indus Legacy</div>
+              <div style={{ fontSize: '9px', letterSpacing: '1.5px', textTransform: 'uppercase', color: '#555' }}>Hotel &amp; Restaurant</div>
+            </div>
+
+            <hr style={{ borderTop: '3px double #000', margin: '6px 0' }} />
+
+            {/* Invoice Info */}
+            {[
+              ['Invoice #', `ORD-${String(receiptModal.order_number || 0).padStart(5,'0')}`],
+              ['Date', new Date().toLocaleDateString('en-PK', { day:'2-digit', month:'short', year:'numeric' })],
+              ['Time', new Date().toLocaleTimeString('en-PK', { hour:'2-digit', minute:'2-digit', hour12: true })],
+              ['Order Type', receiptModal.order_type === 'dine_in' ? 'Dine-In' : receiptModal.order_type === 'delivery' ? 'Delivery' : 'Takeaway'],
+              receiptModal.table_no ? [receiptModal.order_type === 'delivery' ? 'Rider' : 'Table', receiptModal.table_no] : null,
+              user?.username ? ['Cashier', user.username] : null,
+            ].filter(Boolean).map(([label, val], i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '1.5px 0', fontSize: '11px' }}>
+                <span style={{ color: '#555' }}>{label}</span>
+                <span style={{ fontWeight: '700' }}>{val}</span>
               </div>
-              
-              <div className="receipt-items">
+            ))}
+
+            <hr style={{ borderTop: '1px dashed #000', margin: '5px 0' }} />
+
+            {/* Items */}
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #000', fontSize: '10px', textTransform: 'uppercase' }}>
+                  <th style={{ textAlign: 'left', padding: '2px 0' }}>Item</th>
+                  <th style={{ textAlign: 'center', padding: '2px 4px' }}>Qty</th>
+                  <th style={{ textAlign: 'right', padding: '2px 0' }}>Price</th>
+                  <th style={{ textAlign: 'right', padding: '2px 0' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
                 {receiptModal.items?.map((it, i) => (
-                  <div key={i} className="receipt-item">
-                    <span>{it.quantity}x {it.item_name} {it.variant ? `(${it.variant})` : ''}</span>
-                    <span>Rs. {(Number(it.price_at_time) * it.quantity).toLocaleString()}</span>
-                  </div>
+                  <tr key={i}>
+                    <td style={{ padding: '2px 0', fontSize: '11px', wordBreak: 'break-word' }}>{it.item_name}{it.variant ? ` (${it.variant})` : ''}</td>
+                    <td style={{ padding: '2px 4px', fontSize: '11px', textAlign: 'center' }}>{it.quantity}</td>
+                    <td style={{ padding: '2px 0', fontSize: '11px', textAlign: 'right' }}>{Number(it.price_at_time).toLocaleString()}</td>
+                    <td style={{ padding: '2px 0', fontSize: '11px', textAlign: 'right', fontWeight: '700' }}>{(Number(it.price_at_time) * it.quantity).toLocaleString()}</td>
+                  </tr>
                 ))}
+              </tbody>
+            </table>
+
+            <hr style={{ borderTop: '1px dashed #000', margin: '5px 0' }} />
+
+            <hr style={{ borderTop: '1px solid #000', margin: '5px 0' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '900', padding: '2px 0' }}>
+              <span>TOTAL PAYABLE:</span>
+              <span>Rs. {receiptModal.total_amount?.toLocaleString()}</span>
+            </div>
+
+            <hr style={{ borderTop: '1px dashed #000', margin: '5px 0' }} />
+
+            <div style={{ textAlign: 'center', margin: '4px 0' }}>
+              <span style={{ border: '1.5px solid #000', padding: '2px 10px', fontSize: '10px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>PAID VIA: {paymentMethod}</span>
+            </div>
+
+            <hr style={{ borderTop: '3px double #000', margin: '6px 0' }} />
+
+            {/* Footer */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontWeight: '700', fontSize: '11px' }}>*** Thank You! Come Again ***</div>
+              <div style={{ fontSize: '10px', lineHeight: '1.7', color: '#333', marginTop: '4px' }}>
+                Indus Legacy Hotel &amp; Restaurant<br />
+                Karachi Bypass Road, Indus Town<br />
+                Karachi, Pakistan
               </div>
-              
-              <div className="receipt-total">
-                <span>Total Paid:</span>
-                <span>Rs. {receiptModal.total_amount?.toLocaleString()}</span>
-              </div>
-              
-              <div className="receipt-footer">
-                Thank you for dining with Indus Hotel!
-              </div>
+              <div style={{ fontSize: '9px', color: '#888', marginTop: '4px' }}>Powered by Indus Legacy</div>
             </div>
           </div>
         )}
@@ -489,6 +582,121 @@ const Pos = () => {
             />
           </div>
         </div>
+      </Modal>
+
+      {/* Size & Quantity Selection Modal with Validation */}
+      <Modal
+        isOpen={qtyModalItem !== null}
+        onClose={() => setQtyModalItem(null)}
+        title="🛒 Configure Item Portion & Qty"
+        footer={
+          <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+            <button 
+              onClick={handleAddWithQty}
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+            >
+              Add to Order
+            </button>
+            <button onClick={() => setQtyModalItem(null)} className="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        {qtyModalItem && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '1rem 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-table-row)', padding: '0.75rem', borderRadius: 'var(--radius-md)' }}>
+              <img 
+                src={qtyModalItem.image_url} 
+                alt={qtyModalItem.name} 
+                style={{ width: '60px', height: '60px', borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} 
+                onError={(e) => { e.target.src = 'https://placehold.co/100x100?text=Food'; }}
+              />
+              <div>
+                <h4 style={{ margin: 0, fontWeight: '700', fontSize: '1.1rem' }}>{qtyModalItem.name}</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{qtyModalItem.category_name}</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="form-label" style={{ fontWeight: '600' }}>Portion Size / Variant</label>
+              <select 
+                className="form-select"
+                value={selectedVariantId}
+                onChange={(e) => {
+                  setSelectedVariantId(e.target.value);
+                  setQtyError('');
+                }}
+                style={{ width: '100%', padding: '0.6rem 0.8rem', fontSize: '0.9rem', background: 'var(--bg-input)' }}
+              >
+                {items
+                  .filter(i => i.name === qtyModalItem.name)
+                  .map(variant => (
+                    <option key={variant.id} value={variant.id}>
+                      {variant.variant || 'Standard'} — Rs. {Number(variant.price).toLocaleString()}
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label" style={{ fontWeight: '600' }}>Quantity</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setItemQty(q => Math.max(1, parseInt(q || 1) - 1));
+                    setQtyError('');
+                  }} 
+                  className="btn btn-secondary" 
+                  style={{ width: '40px', height: '40px', padding: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  -
+                </button>
+                <input 
+                  type="number" 
+                  className="form-control" 
+                  value={itemQty} 
+                  onChange={(e) => {
+                    setItemQty(e.target.value);
+                    setQtyError('');
+                  }} 
+                  style={{ textAlign: 'center', width: '80px', height: '40px', fontSize: '1.1rem', fontWeight: '700' }}
+                  min="1"
+                  max="100"
+                  required
+                />
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setItemQty(q => Math.min(100, parseInt(q || 1) + 1));
+                    setQtyError('');
+                  }} 
+                  className="btn btn-secondary" 
+                  style={{ width: '40px', height: '40px', padding: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {qtyError && (
+              <div style={{ 
+                background: 'rgba(239,68,68,0.1)', 
+                border: '1px solid rgba(239,68,68,0.3)', 
+                borderRadius: 'var(--radius-sm)', 
+                padding: '0.6rem 0.75rem', 
+                color: 'var(--danger)', 
+                fontSize: '0.85rem', 
+                fontWeight: '600' 
+              }}>
+                {qtyError}
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

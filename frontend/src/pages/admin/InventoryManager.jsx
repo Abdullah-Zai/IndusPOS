@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-const InventoryManager = () => {
+const InventoryManager = ({ cashierMode = false }) => {
   const { user } = useAuth();
+  // Cashier can add new stock but cannot edit or delete existing entries
+  const canAdd = true; // Everyone with access can add stock
+  const canEdit = !cashierMode && user?.role !== 'cashier';
   const [inventory, setInventory] = useState([]);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Dry Ingredients');
@@ -364,7 +367,7 @@ const InventoryManager = () => {
                         {item.description || '—'}
                       </td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {user?.role === 'admin' ? (
+                        {canEdit ? (
                           <>
                             <button onClick={() => startEdit(item)} className="btn btn-secondary" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', marginRight: '0.4rem' }}>
                               ✏️ Edit
@@ -374,7 +377,7 @@ const InventoryManager = () => {
                             </button>
                           </>
                         ) : (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Restricted</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>View Only</span>
                         )}
                       </td>
                     </tr>

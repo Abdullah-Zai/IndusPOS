@@ -5,8 +5,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
+        target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/static': {
         target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
         changeOrigin: true,
       }

@@ -1,13 +1,14 @@
 import React from 'react';
+import { ChefIcon, ClockIcon, AlertIcon, CheckIcon, BillingIcon, CloseIcon } from './Icons';
 
 const OrderCard = ({ order, onUpdateStatus, onBillOrder, showActions = true, staggerIndex }) => {
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'pending': return <span className="badge badge-warning">⏳ Pending</span>;
-      case 'preparing': return <span className="badge badge-info">🍳 Preparing</span>;
-      case 'ready': return <span className="badge badge-success">🔔 Ready to Serve</span>;
-      case 'served': return <span className="badge badge-success">🍽️ Served</span>;
-      case 'completed': return <span className="badge badge-secondary">✅ Paid & Completed</span>;
+      case 'pending': return <span className="badge badge-warning" style={{ gap: '4px' }}><ClockIcon width="12" height="12" /> Pending</span>;
+      case 'preparing': return <span className="badge badge-info" style={{ gap: '4px' }}><ChefIcon width="12" height="12" /> Preparing</span>;
+      case 'ready': return <span className="badge badge-success" style={{ gap: '4px' }}><AlertIcon width="12" height="12" /> Ready to Serve</span>;
+      case 'served': return <span className="badge badge-success" style={{ gap: '4px' }}><CheckIcon width="12" height="12" /> Served</span>;
+      case 'completed': return <span className="badge badge-secondary" style={{ gap: '4px' }}><CheckIcon width="12" height="12" /> Paid & Completed</span>;
       default: return <span className="badge badge-secondary">{status}</span>;
     }
   };
@@ -91,16 +92,16 @@ const OrderCard = ({ order, onUpdateStatus, onBillOrder, showActions = true, sta
               <button 
                 onClick={() => onUpdateStatus(order.id, 'preparing')} 
                 className="btn btn-primary" 
-                style={{ flex: 2, padding: '0.6rem' }}
+                style={{ flex: 2, padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
               >
-                🍳 Start Cooking
+                <ChefIcon width="16" height="16" /> Start Cooking
               </button>
               <button 
                 onClick={() => { if(confirm('Cancel this order?')) onUpdateStatus(order.id, 'cancelled'); }} 
                 className="btn btn-danger" 
-                style={{ flex: 1, padding: '0.6rem', border: '1px solid var(--danger)', background: 'transparent', color: 'var(--danger)' }}
+                style={{ flex: 1, padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
               >
-                ✕ Cancel
+                <CloseIcon width="16" height="16" /> Cancel
               </button>
             </>
           )}
@@ -108,27 +109,27 @@ const OrderCard = ({ order, onUpdateStatus, onBillOrder, showActions = true, sta
             <button 
               onClick={() => onUpdateStatus(order.id, 'ready')} 
               className="btn btn-success" 
-              style={{ flex: 1, padding: '0.6rem' }}
+              style={{ flex: 1, padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
             >
-              🔔 Mark Ready
+              <AlertIcon width="16" height="16" /> Mark Ready
             </button>
           )}
           {order.status === 'ready' && onUpdateStatus && (
             <button 
               onClick={() => onUpdateStatus(order.id, 'served')} 
               className="btn btn-secondary" 
-              style={{ flex: 1, padding: '0.6rem', borderColor: 'var(--success)', color: 'var(--success)' }}
+              style={{ flex: 1, padding: '0.6rem', borderColor: 'var(--success)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
             >
-              🍽️ Mark Served
+              <CheckIcon width="16" height="16" /> Mark Served
             </button>
           )}
           {onBillOrder && order.status !== 'completed' && (
             <button 
               onClick={() => onBillOrder(order)} 
               className="btn btn-primary" 
-              style={{ flex: 1, padding: '0.6rem', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+              style={{ flex: 1, padding: '0.6rem', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
             >
-              🧾 Create Bill (Rs. {order.total_amount?.toLocaleString()})
+              <BillingIcon width="16" height="16" /> Create Bill (Rs. {order.total_amount?.toLocaleString()})
             </button>
           )}
         </div>

@@ -9,14 +9,14 @@ const Settings = () => {
 
   // Initial states
   const [settings, setSettings] = useState({
-    restaurantName: 'Indus Cuisine',
+    restaurantName: 'Indus Legacy',
     address: 'Gulberg III, Lahore, Pakistan',
     phone: '+92 42 111 463 877',
-    website: 'www.induscuisine.pk',
+    website: 'www.induslegacy.pk',
     currency: 'Rs.',
     taxRate: 13,
     serviceCharge: 5,
-    receiptFooter: 'Thank you for dining with us at Indus Cuisine!',
+    receiptFooter: 'Thank you for dining with us at Indus Legacy!',
     enableSoundEffects: true,
   });
 

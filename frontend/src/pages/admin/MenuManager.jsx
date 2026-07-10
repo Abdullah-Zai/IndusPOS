@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 
-const MenuManager = () => {
+const MenuManager = ({ readOnly = false }) => {
   const { authFetch, user } = useAuth();
+  const canEdit = !readOnly && user?.role !== 'cashier';
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ const MenuManager = () => {
     image_url: '',
     is_available: true
   });
+  const [validationError, setValidationError] = useState('');
   const [catName, setCatName] = useState('');
   const [uploading, setUploading] = useState(false);
 
@@ -52,6 +54,7 @@ const MenuManager = () => {
 
   const openAddItem = () => {
     setEditItem(null);
+    setValidationError('');
     setFormData({
       name: '',
       category_id: categories[0]?.id || '',
@@ -65,6 +68,7 @@ const MenuManager = () => {
 
   const openEditItem = (item) => {
     setEditItem(item);
+    setValidationError('');
     setFormData({
       name: item.name,
       category_id: item.category_id,
@@ -78,12 +82,29 @@ const MenuManager = () => {
 
   const handleSaveItem = async (e) => {
     e.preventDefault();
+    setValidationError('');
+    
     // Validation
-    if (!formData.name.trim()) return alert('⚠️ Item name is required!');
-    if (formData.name.trim().length < 2) return alert('⚠️ Item name must be at least 2 characters!');
-    if (!formData.category_id) return alert('⚠️ Please select a category!');
-    if (!formData.price || Number(formData.price) <= 0) return alert('⚠️ Price must be greater than Rs. 0!');
-    if (Number(formData.price) > 99999) return alert('⚠️ Price seems unrealistically high (max Rs. 99,999)!');
+    if (!formData.name.trim()) {
+      setValidationError('⚠️ Item name is required!');
+      return;
+    }
+    if (formData.name.trim().length < 2) {
+      setValidationError('⚠️ Item name must be at least 2 characters!');
+      return;
+    }
+    if (!formData.category_id) {
+      setValidationError('⚠️ Please select a category!');
+      return;
+    }
+    if (!formData.price || Number(formData.price) <= 0) {
+      setValidationError('⚠️ Price must be greater than Rs. 0!');
+      return;
+    }
+    if (Number(formData.price) > 99999) {
+      setValidationError('⚠️ Price seems unrealistically high (max Rs. 99,999)!');
+      return;
+    }
 
     try {
       const url = editItem ? `/api/menu/items/${editItem.id}` : '/api/menu/items';
@@ -100,7 +121,7 @@ const MenuManager = () => {
       setItemModal(false);
       loadMenu();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      setValidationError(`Error: ${err.message}`);
     }
   };
 
@@ -176,7 +197,7 @@ const MenuManager = () => {
           <h3>🍽️ Pakistani Cuisine Menu Manager</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage food items, categories, variants, and pricing.</p>
         </div>
-        {user?.role !== 'cashier' && (
+        {canEdit && (
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button onClick={() => setCatModal(true)} className="btn btn-secondary">
               📁 Manage Categories
@@ -187,6 +208,12 @@ const MenuManager = () => {
           </div>
         )}
       </div>
+
+      {!canEdit && (
+        <div style={{ background: 'var(--warning-bg)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 'var(--radius-md)', padding: '0.65rem 1rem', marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          👁️ <strong>View Only</strong> — Cashiers can browse the menu but cannot add, edit, or delete items.
+        </div>
+      )}
 
       {/* Category Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1.5rem', paddingBottom: '0.5rem' }}>
@@ -220,7 +247,7 @@ const MenuManager = () => {
               <th>Variant</th>
               <th>Price</th>
               <th>Status</th>
-              {user?.role !== 'cashier' && <th style={{ textAlign: 'right' }}>Actions</th>}
+              {canEdit && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -245,7 +272,7 @@ const MenuManager = () => {
                       <span className="badge badge-danger">Out of Stock</span>
                     )}
                   </td>
-                  {user?.role !== 'cashier' && (
+                  {canEdit && (
                     <td style={{ textAlign: 'right' }}>
                       <button onClick={() => openEditItem(item)} className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem', marginRight: '0.5rem' }}>✏️ Edit</button>
                       <button onClick={() => handleDeleteItem(item.id)} className="btn btn-danger" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}>🗑️ Delete</button>
@@ -284,8 +311,29 @@ const MenuManager = () => {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Variant (Optional)</label>
+              <label className="form-label">Variant / Portion Size (Optional)</label>
               <input type="text" className="form-input" placeholder="e.g. Half, Full, 4 pcs" value={formData.variant} onChange={(e) => setFormData({...formData, variant: e.target.value})} />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.35rem' }}>
+                {['Full', 'Half', 'Single', 'Double', 'Small', 'Medium', 'Large', 'Regular'].map(sz => (
+                  <button
+                    key={sz}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, variant: sz })}
+                    style={{
+                      padding: '0.15rem 0.35rem',
+                      fontSize: '0.7rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      background: formData.variant === sz ? 'var(--accent-gradient)' : 'var(--bg-hover)',
+                      color: formData.variant === sz ? '#fff' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.1s ease'
+                    }}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -303,7 +351,7 @@ const MenuManager = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: '0.5rem' }}>
             <label className="form-label">Dish Image</label>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem' }}>
               <input 
@@ -323,6 +371,21 @@ const MenuManager = () => {
               onChange={(e) => setFormData({...formData, image_url: e.target.value})} 
             />
           </div>
+
+          {validationError && (
+            <div style={{ 
+              background: 'rgba(239,68,68,0.1)', 
+              border: '1px solid rgba(239,68,68,0.3)', 
+              borderRadius: 'var(--radius-sm)', 
+              padding: '0.6rem 0.75rem', 
+              color: 'var(--danger)', 
+              fontSize: '0.85rem', 
+              fontWeight: '600',
+              marginTop: '1rem' 
+            }}>
+              {validationError}
+            </div>
+          )}
         </form>
       </Modal>
 

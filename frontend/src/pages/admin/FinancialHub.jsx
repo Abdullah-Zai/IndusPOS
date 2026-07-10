@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-const FinancialHub = () => {
+const FinancialHub = ({ cashierMode = false }) => {
   const { authFetch, user } = useAuth();
-  const isCashier = user?.role === 'cashier';
+  const isCashier = cashierMode || user?.role === 'cashier';
   const [activeTab, setActiveTab] = useState('sales'); // sales, expenses, profit_loss
   const [activeSubTab, setActiveSubTab] = useState('exp_list'); // exp_list, sal_list, exp_form, sal_form, cat_form
 
@@ -13,6 +13,11 @@ const FinancialHub = () => {
   const [recentBills, setRecentBills] = useState([]);
   const [monthlySales, setMonthlySales] = useState([]);
   const [loadingSales, setLoadingSales] = useState(true);
+
+  // Daily Sales Report State
+  const [dailySales, setDailySales] = useState([]);
+  const [dailyFilterMonth, setDailyFilterMonth] = useState(new Date().toISOString().slice(0, 7)); // Defaults to current month, e.g. "2026-07"
+  const [loadingDaily, setLoadingDaily] = useState(false);
 
   // Date filters for Sales
   const [startDate, setStartDate] = useState('');
@@ -82,6 +87,28 @@ const FinancialHub = () => {
   useEffect(() => {
     loadSalesData();
   }, [startDate, endDate]);
+
+  const loadDailySales = async () => {
+    setLoadingDaily(true);
+    try {
+      let url = '/api/reports/daily';
+      if (dailyFilterMonth) {
+        url += `?month=${dailyFilterMonth}`;
+      }
+      const res = await authFetch(url);
+      if (res.ok) {
+        setDailySales(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingDaily(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDailySales();
+  }, [dailyFilterMonth]);
 
   // 2. Load Expenses, Salaries, Categories & Staff Users
   const loadLocalData = async () => {
@@ -282,13 +309,15 @@ const FinancialHub = () => {
             💸 Operating Costs &amp; Payroll
           </button>
         )}
-        <button 
-          onClick={() => setActiveTab('profit_loss')} 
-          className={`btn ${activeTab === 'profit_loss' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-        >
-          📅 Monthly Profit &amp; Loss
-        </button>
+        {!isCashier && (
+          <button 
+            onClick={() => setActiveTab('profit_loss')} 
+            className={`btn ${activeTab === 'profit_loss' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            📅 Monthly Profit &amp; Loss
+          </button>
+        )}
       </div>
 
       {/* Main Stats Header */}
@@ -309,9 +338,9 @@ const FinancialHub = () => {
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Gas, Elec, Stock supplies</span>
         </div>
 
-        <div className="glass-card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
+        <div className="glass-card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%)', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Paid Payroll</span>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#818cf8', margin: '0.4rem 0' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--accent-primary)', margin: '0.4rem 0' }}>
             Rs. {totalSalariesSum.toLocaleString()}
           </div>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Staff salary payouts</span>
@@ -418,10 +447,74 @@ const FinancialHub = () => {
               </div>
             </div>
           </div>
+
+          {/* Daily Sales Report Section */}
+          <div className="glass-card" style={{ padding: '1.5rem', marginTop: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h4 style={{ fontSize: '1.15rem', marginBottom: '0.2rem' }}>📅 Daily Sales &amp; Order Volume Report</h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>View total transaction volume and revenue broken down day-by-day. Days with zero sales are omitted.</p>
+              </div>
+              
+              {/* Month Filter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>Filter Month:</span>
+                <input 
+                  type="month" 
+                  className="form-input" 
+                  value={dailyFilterMonth} 
+                  onChange={(e) => setDailyFilterMonth(e.target.value)} 
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', width: '160px', background: 'var(--bg-input)' }} 
+                />
+                {dailyFilterMonth && (
+                  <button onClick={() => setDailyFilterMonth('')} className="btn btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}>Clear</button>
+                )}
+              </div>
+            </div>
+
+            {loadingDaily ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading daily sales reports...</div>
+            ) : dailySales.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No sales recorded for this month/period.</div>
+            ) : (
+              <div className="table-container" style={{ border: 'none' }}>
+                <table className="custom-table" style={{ fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th style={{ textAlign: 'center' }}>Total Sales (Count)</th>
+                      <th style={{ textAlign: 'right' }}>Total Revenue</th>
+                      <th style={{ textAlign: 'right' }}>Average Ticket</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dailySales.map((day, i) => (
+                      <tr key={i}>
+                        <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                          📅 {new Date(day.date).toLocaleDateString('en-PK', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className="badge badge-info" style={{ fontSize: '0.85rem', fontWeight: '700', padding: '0.25rem 0.75rem' }}>
+                            {day.sales_count} order{day.sales_count !== 1 ? 's' : ''}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: '800', color: '#10b981' }}>
+                          Rs. {day.revenue.toLocaleString()}
+                        </td>
+                        <td style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>
+                          Rs. {day.sales_count > 0 ? Math.round(day.revenue / day.sales_count).toLocaleString() : 0}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {activeTab === 'expenses' && (
+      {!isCashier && activeTab === 'expenses' && (
         <div className="animate-fade-in">
           {/* Sub menu controls */}
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
@@ -615,7 +708,7 @@ const FinancialHub = () => {
         </div>
       )}
 
-      {activeTab === 'profit_loss' && (
+      {!isCashier && activeTab === 'profit_loss' && (
         <div className="animate-fade-in glass-card" style={{ padding: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '1.25rem' }}>📅 Monthly Profit & Loss Ledger</h4>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Monthly sales consolidated from the SQL database matched with local storage operating costs and staff salaries.</p>

@@ -1,5 +1,18 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { 
+  DashboardIcon, 
+  PosIcon, 
+  BillingIcon, 
+  MenuIcon, 
+  TablesIcon, 
+  InventoryIcon, 
+  FinancialIcon, 
+  UsersIcon, 
+  SettingsIcon, 
+  ChefIcon, 
+  EditIcon 
+} from './Icons';
 
 const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
   const { user } = useAuth();
@@ -7,34 +20,34 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
   if (!user) return null;
 
   const adminLinks = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'pos', label: 'Admin POS', icon: '🖥️' },
-    { id: 'billing', label: 'Open Billing', icon: '🧾' },
-    { id: 'menu', label: 'Menu Manager', icon: '🍽️' },
-    { id: 'tables', label: 'Manage Tables', icon: '🪑' },
-    { id: 'inventory', label: 'Inventory Stash', icon: '📦' },
-    { id: 'financials', label: 'Financial Hub', icon: '💰' },
-    { id: 'users', label: 'Staff Users', icon: '👥' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
+    { id: 'pos', label: 'Indus Legacy', icon: <PosIcon /> },
+    { id: 'billing', label: 'Open Billing', icon: <BillingIcon /> },
+    { id: 'menu', label: 'Menu Manager', icon: <MenuIcon /> },
+    { id: 'tables', label: 'Manage Tables', icon: <TablesIcon /> },
+    { id: 'inventory', label: 'Inventory Stash', icon: <InventoryIcon /> },
+    { id: 'financials', label: 'Financial Hub', icon: <FinancialIcon /> },
+    { id: 'users', label: 'Staff Users', icon: <UsersIcon /> },
+    { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
   ];
 
   const waiterLinks = [
-    { id: 'dashboard', label: 'Tables Status', icon: '🪑' },
-    { id: 'new_order', label: 'Take Order', icon: '📝' },
+    { id: 'dashboard', label: 'Tables Status', icon: <TablesIcon /> },
+    { id: 'new_order', label: 'Take Order', icon: <EditIcon /> },
   ];
 
   const kitchenLinks = [
-    { id: 'dashboard', label: 'Kitchen Display (KDS)', icon: '🍳' },
+    { id: 'dashboard', label: 'Kitchen Display (KDS)', icon: <ChefIcon /> },
   ];
 
   const cashierLinks = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'pos', label: 'Takeaway POS', icon: '🖥️' },
-    { id: 'billing', label: 'Settle Bills', icon: '🧾' },
-    { id: 'menu', label: 'Menu List', icon: '🍽️' },
-    { id: 'tables', label: 'Tables Status', icon: '🪑' },
-    { id: 'inventory', label: 'Inventory Stash', icon: '📦' },
-    { id: 'financials', label: 'Sales & Ledger', icon: '💰' },
+    { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
+    { id: 'pos', label: 'Indus Legacy POS', icon: <PosIcon /> },
+    { id: 'billing', label: 'Settle Bills', icon: <BillingIcon /> },
+    { id: 'tables', label: 'Tables Status', icon: <TablesIcon /> },
+    { id: 'menu', label: 'Menu List', icon: <MenuIcon /> },
+    { id: 'inventory', label: 'Inventory Stash', icon: <InventoryIcon /> },
+    { id: 'financials', label: 'Financials & Expense', icon: <FinancialIcon /> },
   ];
 
   let links = [];
@@ -48,7 +61,7 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
       <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <img 
           src="/logo.png" 
-          alt="Indus Cuisine" 
+          alt="Indus Legacy" 
           style={{ 
             width: '45px', 
             height: '45px', 
@@ -60,9 +73,9 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
         />
         <div>
           <h1 style={{ fontSize: '1.1rem', lineHeight: '1.2', fontWeight: '800' }}>
-            INDUS <span className="gradient-text">CUISINE</span>
+            INDUS <span className="gradient-text">LEGACY</span>
           </h1>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fine Dining POS</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Indus Legacy</span>
         </div>
       </div>
 
@@ -109,7 +122,7 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
                 }
               }}
             >
-              <span style={{ fontSize: '1.2rem' }}>{link.icon}</span>
+              <span style={{ display: 'flex', alignItems: 'center' }}>{link.icon}</span>
               {link.label}
             </button>
           );
@@ -117,7 +130,7 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
       </nav>
 
       <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-        Indus Hotel POS v2.0.0
+        Indus Legacy v2.0.0
       </div>
     </aside>
   );

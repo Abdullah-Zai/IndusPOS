@@ -2,36 +2,43 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, Integer, cast
 from database import get_db
 import models, schemas, auth
 
 router = APIRouter(prefix="/api/orders", tags=["Orders & Billing"])
+bill_router = APIRouter(prefix="/api/bills", tags=["Bill History"])
 
 def generate_order_number(db: Session):
-    """Generate Next Order Number (4 PM Reset Rule)"""
+    """Generate Next Order Number (6 AM Reset Rule)"""
     now = datetime.now()
-    if now.hour < 16:
+    if now.hour < 6:
         business_date = (now - timedelta(days=1)).strftime("%Y-%m-%d")
     else:
         business_date = now.strftime("%Y-%m-%d")
 
-    last_order = db.query(func.max(models.Order.order_number)).filter(
+    # Cast to Integer so max is numeric ("10" > "9"), not alphabetical
+    last_order_num = db.query(
+        func.max(cast(models.Order.order_number, Integer))
+    ).filter(
         models.Order.business_date == business_date
     ).scalar()
 
-    if last_order:
-        try:
-            next_order = int(last_order) + 1
-        except ValueError:
-            next_order = 1
-    else:
-        next_order = 1
+    next_order = (last_order_num or 0) + 1
 
     return {
         "number": str(next_order).zfill(4),
         "business_date": business_date
     }
+
+
+def generate_bill_number(db: Session, business_date: str) -> str:
+    """Generate a unique sequential bill number resetting daily (6 AM shift rule)."""
+    count = db.query(func.count(models.Bill.id)).join(models.Order).filter(
+        models.Order.business_date == business_date
+    ).scalar() or 0
+    formatted_date = business_date.replace("-", "")[2:] # e.g. "260709"
+    return f"{formatted_date}-{str(count + 1).zfill(4)}"
 
 def enrich_order_response(order: models.Order) -> schemas.OrderResponse:
     resp = schemas.OrderResponse.model_validate(order)
@@ -127,7 +134,7 @@ def direct_checkout(
 
     new_bill = models.Bill(
         order_id=new_order.id,
-        bill_number=f"BILL-{order_meta['number']}",
+        bill_number=generate_bill_number(db, new_order.business_date),
         total_amount=total_amount,
         payment_method=order_in.payment_method or "Cash"
     )
@@ -208,7 +215,7 @@ def create_order_bill(
     
     new_bill = models.Bill(
         order_id=order.id,
-        bill_number=f"BILL-{order.order_number}",
+        bill_number=generate_bill_number(db, order.business_date),
         total_amount=bill_in.total_amount,
         payment_method=bill_in.payment_method
     )
@@ -217,3 +224,47 @@ def create_order_bill(
     db.commit()
     db.refresh(new_bill)
     return new_bill
+
+
+# ─────────────────────────────────────────────
+# Bill History Endpoint
+# ─────────────────────────────────────────────
+
+@bill_router.get("")
+def get_bill_history(
+    limit: int = Query(200, ge=1, le=500),
+    business_date: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_roles(["admin", "cashier"]))
+):
+    """Return full bill history with order items for the frontend history view."""
+    query = db.query(models.Bill).join(models.Order)
+    if business_date:
+        query = query.filter(models.Order.business_date == business_date)
+    bills = query.order_by(models.Bill.id.desc()).limit(limit).all()
+
+    result = []
+    for b in bills:
+        order = b.order
+        items = []
+        for oi in order.items:
+            items.append({
+                "item_name": oi.menu_item.name if oi.menu_item else "Unknown",
+                "variant": oi.menu_item.variant if oi.menu_item else None,
+                "quantity": oi.quantity,
+                "price_at_time": float(oi.price_at_time),
+            })
+        result.append({
+            "id": b.id,
+            "bill_number": b.bill_number,
+            "order_id": b.order_id,
+            "order_number": order.order_number,
+            "order_type": order.order_type,
+            "table_no": order.table_no,
+            "business_date": order.business_date,
+            "payment_method": b.payment_method,
+            "total_amount": float(b.total_amount),
+            "created_at": b.created_at.strftime("%Y-%m-%dT%H:%M:%S"),
+            "items": items,
+        })
+    return result
